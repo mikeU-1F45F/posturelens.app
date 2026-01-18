@@ -218,12 +218,36 @@ tsc --watch --noEmit
 ```
 
 ### **JavaScript runtime (Bun)**
-Use Bun as the JavaScript runtime for any tooling defined in `package.json`:
+Use Bun as the JavaScript runtime and testing framework for any tooling defined in `package.json`:
 ```bash
 bun install
 bun run <script-name>
+bun test                    # Run test suite
+bun test --watch           # Watch mode for development
 ```
 Replace `<script-name>` with the appropriate script from `package.json` (for example, `dev`, `build`, or `test`).
+
+### **HTMX for MVP UI**
+**Decision**: Use HTMX (https://htmx.org/) for the MVP/prototype UI. This provides a minimal JavaScript approach while maintaining interactivity.
+- **Rationale**: Faster development, smaller bundle, simpler state management for initial release
+- **Migration path**: May migrate to vanilla JS in v0.2.0 if performance bottlenecks emerge
+- **Alternative considered**: Vanilla JS from start, but HTMX accelerates prototype phase
+
+### **Version Management & Semver**
+Follow SemVer 2.0.0 for releases. MVP phase targets 0.x.x versions:
+- **0.1.0**: Initial MVP release (7-week roadmap)
+- **0.2.x+**: Feature enhancements based on user feedback
+- **1.0.0**: Production-ready with full test coverage and stability guarantees
+
+**Version Warning**: Any breaking changes to the API or data format require minor version bump (0.1 → 0.2). Service worker version mismatch handling must respect this.
+
+### **Accessibility Foundation**
+Base level accessibility included in MVP:
+- High contrast UI elements
+- Keyboard navigation support (tab order, enter/space activation)
+- ARIA labels for screen readers
+- Announcement of alerts via ARIA live regions
+- Full accessibility audit deferred to post-MVP (v0.2.x)
 
 ### **Hot Reload**
 Add `?no-sw` query param to disable Service Worker during development: `http://localhost:8788/?no-sw`
@@ -240,6 +264,34 @@ Add `?no-sw` query param to disable Service Worker during development: `http://l
 | **getUserMedia** | 21+ ✓ | 12+ ✓ | 36+ ✓ | 11+ ✓ |
 
 **Recommend**: Chrome 113+ for full WebGPU acceleration. Fallback to WASM-only in Firefox/Safari with performance warning.
+
+---
+
+## Version Warnings for Bleeding-Edge Technology
+
+ShadowNudge uses modern browser APIs that may have limited support:
+
+### **WebGPU (Chrome 113+, Edge 113+)**
+- **Warning**: WebGPU is still maturing. Performance varies significantly by GPU vendor (Intel, AMD, NVIDIA).
+- **User Impact**: Chrome may freeze briefly during model initialization.
+- **Mitigation**: Graceful fallback to WASM backend maintains functionality with reduced performance.
+
+### **OffscreenCanvas (Chrome 69+, Firefox 105+)**
+- **Warning**: Firefox 105+ has incomplete OffscreenCanvas support in workers.
+- **User Impact**: Ghost rendering may block main thread in some Firefox versions.
+- **Mitigation**: Keep main inference on main thread; ghost rendering failure is non-critical.
+
+### **MediaPipe WASM (Chrome 90+, Firefox 88+)**
+- **Warning**: WASM compilation adds ~500ms-2s to initial load.
+- **User Impact**: First visit has noticeable startup delay.
+- **Mitigation**: Service Worker caching makes subsequent loads <2s.
+
+### **WebGL Context Limits**
+- **Warning**: Running multiple GPU-accelerated tabs may exhaust GPU memory.
+- **User Impact**: Browser may crash or become unresponsive.
+- **Mitigation**: Call `holistic.close()` on page unload; warn users in documentation.
+
+**Policy**: Only mobile gate should hard-block. All other technology gaps should show warnings and degrade gracefully.
 
 ---
 
@@ -282,8 +334,8 @@ This preserves zero-telemetry guarantees while still enabling rich, local-only t
 1. **Week 1**: Scaffold repo, mobile gate, Service Worker
 2. **Week 2**: MediaPipe Holistic integration with WebGPU detection
 3. **Week 3**: Reference pose capture & IndexedDB storage
-4. **Week 4**: Deviation detection logic + background flash alerts
-5. **Week 5**: Ghost rendering worker + hand-face proximity detection
+4. **Week 4**: Hand-face proximity detection (priority feature) + basic deviation detection
+5. **Week 5**: Ghost rendering worker + visual alerts (backdrop flash)
 6. **Week 6**: Settings panel (sensitivity, model level)
 7. **Week 7**: Stress testing & battery API integration
 
