@@ -16,6 +16,13 @@
   - `workers/` - OffscreenCanvas rendering worker
   - `main.ts` - App bootstrap and orchestration
 - **`package.json`** - Version drives service worker updates
+- **`wrangler.jsonc`** - Cloudflare Pages deployment config (JSONC recommended by Cloudflare for new projects)
+
+## Development & Deployment
+
+**Local Development**: Bun runtime with `bun run dev` for dev server, `bun build` for production builds
+
+**Deployment**: Cloudflare Pages (static hosting) via Wrangler CLI
 
 ## Core Technologies
 

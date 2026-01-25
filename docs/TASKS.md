@@ -8,22 +8,50 @@
 
 All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer workflow - one branch, incremental commits, no testing framework.
 
+**Implementation Decisions (Locked)**
+- **Dev Server**: Bun built-in dev server, serves `public/` on port 3000
+- **Build Tool**: `bun build` (sufficient for static app, no complex bundling needed)
+- **Service Worker**: Hand-written (no Workbox/SW tooling) - simple precaching only
+- **TypeScript**: ES2022 target, ESNext modules, full strict mode
+- **Models**: Start with holistic-lite only (~4MB), defer full/heavy variants
+- **CSS**: Vanilla CSS file in `public/` (no frameworks/preprocessors)
+- **Audio**: Web Audio API programmatic beep (no audio files)
+- **Error Handling**: Non-blocking UI notifications (console + visual toast)
+- **Git**: Feature branches with PRs to main (no direct commits)
+- **Code Quality**: **Biome** for linting/formatting (not built into Bun; added as dev dependency)
+  - Scripts: `bun run format`, `bun run lint`, `bun run check`, `bun run precommit`
+  - Config: biome.json + .biomeignore
+  - Pre-commit: Run `bun run precommit` before commits (formats + checks)
+- **Monorepo**: Single root `package.json` (no workspace setup)
+
 ## Phase 0: Foundation & Tooling
 
 ### 0.1 Repository Structure & Configuration
 - [ ] Initialize `package.json` with version 0.1.0
   - Add TypeScript config
+  - Add dev script: `bun run dev` (port 3000, serves `/public`)
+  - Add build script: `bun run build`
 - [ ] Create `public/` directory structure
 - [ ] Create `src/core/`, `src/workers/` directories
-- [ ] Add `wrangler.toml` for Cloudflare Pages
-- [ ] Create `.gitignore` (exclude build artifacts, models)
+- [ ] Download MediaPipe holistic-lite model (~4MB) to `public/models/`
+- [ ] Add `wrangler.jsonc` for Cloudflare Pages deployment
+- [ ] Create `.gitignore` (exclude build artifacts, node_modules)
 - [ ] Create `README.md` with quickstart
 
 ### 0.2 Development Tooling
-- [ ] Configure TypeScript (`tsconfig.json`, strict mode)
-- [ ] Configure build pipeline (bun build or esbuild)
-- [ ] Add development server config
+- [ ] Configure TypeScript (`tsconfig.json`)
+  - Target: ES2022
+  - Module: ESNext with bundler resolution
+  - Strict: true (full strict mode)
+  - Lib: DOM, DOM.Iterable, WebWorker, ES2022
+- [ ] Configure build pipeline (`bun build`)
+  - Entry: `src/main.ts`
+  - Output: `public/main.js`
+  - Minify: true
+- [ ] Add development server config: `bun run dev` serves `public/` on port 3000
 - **Note**: No testing framework - rely on TypeScript LSP only for MVP
+- **Note**: Hand-write service worker (no Workbox) for simpler control
+- **Runtime**: Bun for local dev, Cloudflare Pages for deployment
 
 ### 0.3 Core Project Files (Skeleton)
 - [ ] Create `src/main.ts` (empty shell with imports)
