@@ -1,12 +1,20 @@
 ---
-name: multi-stage-commit
-description: Analyze changes and create logical multi-commit PRs with proper grouping and messages
+name: commit
+description: Intelligent commit assistant for any workflow - analyzes changes and creates logical commits with automatic grouping
 license: MIT
 compatibility: opencode
 metadata:
   category: git
-  usage: before-committing
+  usage: commit
   team-size: any
+  auto-trigger-keywords:
+    - commit
+    - commit please
+    - commit changes
+    - commit this
+    - commit now
+    - stage commits
+    - prepare commits
 ---
 
 ## What I do
