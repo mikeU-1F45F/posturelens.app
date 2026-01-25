@@ -19,5 +19,8 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@mediapipe/holistic": "^0.5.1675471629"
   }
 }
