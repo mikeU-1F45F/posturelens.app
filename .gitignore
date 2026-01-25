@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+*.js
+*.js.map
+*.d.ts
+!public/sw.js
+public/main.js
+public/main.js.map
+out/
+dist/
+*.tgz
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Bun
+bun.lockb
+
+# Wrangler
+.wrangler/
+.dev.vars
+
+# Models (large binaries, should be downloaded locally)
+public/models/*.bin
+
+# Code coverage
+coverage/
+*.lcov
+*.tsbuildinfo
+
+# Caches
+.eslintcache
+.cache
