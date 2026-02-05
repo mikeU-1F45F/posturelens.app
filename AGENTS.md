@@ -3,7 +3,8 @@
 **Version**: 0.1.0-MVP  
 **Target**: Desktop/laptop browsers only (Chrome 90+)  
 **Privacy**: Zero telemetry, pure local-first  
-**Dev Approach**: TypeScript-first, no testing framework (LSP-driven development)
+**Dev Approach**: TypeScript-first, no testing framework (LSP-driven development)  
+**Philosophy**: Make it work. Make it good. Make it performant.
 
 ## Project Structure
 
@@ -59,6 +60,19 @@ UA substring detection blocks mobile devices before any asset loading. Mobile us
 ## Service Worker & Versioning
 
 Service worker caches all static assets including models. Version is embedded from package.json at build time. On version mismatch, shows "Reload for vX.X.X?" toast.
+
+## Asset Loading Strategy
+
+**First-time Download**: ~26MB (MediaPipe WASM, models, assets)
+- Accepted trade-off for local-first, offline-capable operation
+- All assets cached by service worker after initial load
+- Subsequent loads: <2s from cache
+- UI shows progress indicator during first-time model loading
+
+**Future optimization considerations** (post-MVP):
+- Pose-only mode (skip hand/face tracking) for lighter initial load
+- Progressive model loading (lite → full → heavy on-demand)
+- Defer to "Make it work. Make it good. Make it performant." philosophy
 
 ## UI/UX Decisions
 

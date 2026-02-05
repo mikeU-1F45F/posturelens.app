@@ -11,6 +11,12 @@
   <div id="app">
     <h1>ShadowNudge</h1>
     <div id="status">Loading...</div>
+    <div id="progress-container" class="progress-container" style="display: none;">
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <div id="progress-text" class="progress-text"></div>
+    </div>
     <button id="capture-btn" disabled>Capture Reference Pose</button>
     <button id="start-btn" disabled>Start Monitoring</button>
     <div id="error-toast" class="error-toast"></div>

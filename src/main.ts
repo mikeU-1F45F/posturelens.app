@@ -96,6 +96,27 @@ function updateStatusDisplay(message: string): void {
   }
 }
 
+function showProgress(message: string, percent?: number): void {
+  const progressContainer = document.getElementById('progress-container')
+  const progressFill = document.getElementById('progress-fill')
+  const progressText = document.getElementById('progress-text')
+
+  if (progressContainer && progressFill && progressText) {
+    progressContainer.style.display = 'block'
+    progressText.textContent = message
+    if (percent !== undefined) {
+      progressFill.style.width = `${percent}%`
+    }
+  }
+}
+
+function hideProgress(): void {
+  const progressContainer = document.getElementById('progress-container')
+  if (progressContainer) {
+    progressContainer.style.display = 'none'
+  }
+}
+
 function showErrorToast(message: string): void {
   const toast = document.getElementById('error-toast')
   if (toast) {
@@ -169,18 +190,25 @@ async function initializeApp(): Promise<void> {
   // Initialize detector
   try {
     updateStatusDisplay('Initializing detector...')
+    showProgress('First-time download: ~26MB (cached for future visits)', 10)
+
     const detector = new Detector({ modelComplexity: 0 })
     detector.onResults(onDetectorResults)
 
-    updateStatusDisplay('Loading MediaPipe model...')
+    updateStatusDisplay('Loading MediaPipe models...')
+    showProgress('Downloading models and assets (one-time)', 30)
     await detector.loadModel()
+    showProgress('Models loaded', 70)
 
     updateStatusDisplay('Setting up webcam...')
+    showProgress('Requesting camera access', 80)
     const video = await setupWebcam()
+    showProgress('Camera ready', 90)
 
     updateStatusDisplay('Starting detection...')
     await startDetection(detector, video)
 
+    hideProgress()
     updateStatusDisplay('Running')
     console.log('[ShadowNudge] App initialized successfully')
 
