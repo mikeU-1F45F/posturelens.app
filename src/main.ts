@@ -69,20 +69,33 @@ function displayCapabilityWarning(missing: string[]): void {
 }
 
 async function setupWebcam(): Promise<HTMLVideoElement> {
-  const video = document.createElement('video')
-  video.width = 640
-  video.height = 480
-  video.autoplay = true
-  video.playsInline = true
+  const videoPreview = document.getElementById('video-preview') as HTMLVideoElement
+  if (!videoPreview) {
+    throw new Error('Video preview element not found')
+  }
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { width: 640, height: 480, facingMode: 'user' },
       audio: false,
     })
-    video.srcObject = stream
+    videoPreview.srcObject = stream
+
+    // Show video container
+    const videoContainer = document.getElementById('video-container')
+    if (videoContainer) {
+      videoContainer.style.display = 'block'
+    }
+
+    // Setup detection canvas
+    const canvas = document.getElementById('detection-canvas') as HTMLCanvasElement
+    if (canvas) {
+      canvas.width = 640
+      canvas.height = 480
+    }
+
     console.log('[ShadowNudge] Webcam stream acquired')
-    return video
+    return videoPreview
   } catch (error) {
     console.error('[ShadowNudge] Webcam access failed:', error)
     throw new Error('Failed to access webcam. Please grant camera permissions.')
@@ -128,28 +141,138 @@ function showErrorToast(message: string): void {
   }
 }
 
+function drawBoundingBox(
+  ctx: CanvasRenderingContext2D,
+  landmarks: Array<{ x: number; y: number }>,
+  color: string,
+): void {
+  if (!landmarks || landmarks.length === 0) return
+
+  // Calculate bounding box
+  let minX = 1,
+    minY = 1,
+    maxX = 0,
+    maxY = 0
+  for (const landmark of landmarks) {
+    minX = Math.min(minX, landmark.x)
+    minY = Math.min(minY, landmark.y)
+    maxX = Math.max(maxX, landmark.x)
+    maxY = Math.max(maxY, landmark.y)
+  }
+
+  // Convert to canvas coordinates
+  const x = minX * ctx.canvas.width
+  const y = minY * ctx.canvas.height
+  const w = (maxX - minX) * ctx.canvas.width
+  const h = (maxY - minY) * ctx.canvas.height
+
+  // Draw box
+  ctx.strokeStyle = color
+  ctx.lineWidth = 2
+  ctx.strokeRect(x, y, w, h)
+}
+
+function updateDetectionStatus(label: string, detected: boolean, emoji: string): void {
+  const statusElement = document.getElementById(`${label}-status`)
+  if (statusElement) {
+    statusElement.textContent = detected ? emoji : '✗'
+    statusElement.style.color = detected ? '#00ff88' : '#ff4444'
+  }
+}
+
 function onDetectorResults(results: Results): void {
-  // TODO: Pass results to NudgeEngine for comparison
-  // For now, just log landmark counts
   const poseLandmarks = results.poseLandmarks?.length ?? 0
   const leftHandLandmarks = results.leftHandLandmarks?.length ?? 0
   const rightHandLandmarks = results.rightHandLandmarks?.length ?? 0
   const faceLandmarks = results.faceLandmarks?.length ?? 0
 
-  console.log(
+  // Console logging for developers
+  console.info(
     `[Detector] Landmarks - Pose: ${poseLandmarks}, Left Hand: ${leftHandLandmarks}, Right Hand: ${rightHandLandmarks}, Face: ${faceLandmarks}`,
   )
+
+  // Update status labels with emojis
+  updateDetectionStatus('pose', poseLandmarks > 0, '🧍')
+  updateDetectionStatus('left-hand', leftHandLandmarks > 0, '✋')
+  updateDetectionStatus('right-hand', rightHandLandmarks > 0, '🤚')
+  updateDetectionStatus('face', faceLandmarks > 0, '😊')
+
+  // Draw bounding boxes
+  const canvas = document.getElementById('detection-canvas') as HTMLCanvasElement
+  if (!canvas) return
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  // Draw boxes for detected parts
+  if (results.poseLandmarks) {
+    drawBoundingBox(ctx, results.poseLandmarks, '#00ff88') // Green for pose
+  }
+  if (results.leftHandLandmarks) {
+    drawBoundingBox(ctx, results.leftHandLandmarks, '#ff4444') // Red for left hand
+  }
+  if (results.rightHandLandmarks) {
+    drawBoundingBox(ctx, results.rightHandLandmarks, '#ffaa00') // Orange for right hand
+  }
+  if (results.faceLandmarks) {
+    drawBoundingBox(ctx, results.faceLandmarks, '#00aaff') // Blue for face
+  }
 }
 
+let detectionLoopRunning = false
+let animationFrameId: number | null = null
+
 async function startDetection(detector: Detector, video: HTMLVideoElement): Promise<void> {
+  if (detectionLoopRunning) return
+
+  detectionLoopRunning = true
   const processNextFrame = async () => {
+    if (!detectionLoopRunning) return
+
     if (video.readyState >= 2) {
       await detector.processFrame(video)
     }
-    requestAnimationFrame(processNextFrame)
+    animationFrameId = requestAnimationFrame(processNextFrame)
   }
-  requestAnimationFrame(processNextFrame)
+  animationFrameId = requestAnimationFrame(processNextFrame)
   console.log('[ShadowNudge] Detection loop started')
+}
+
+function stopDetection(video: HTMLVideoElement): void {
+  detectionLoopRunning = false
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
+  }
+
+  // Stop webcam stream
+  const stream = video.srcObject as MediaStream
+  if (stream) {
+    for (const track of stream.getTracks()) {
+      track.stop()
+    }
+    video.srcObject = null
+  }
+
+  // Hide video container
+  const videoContainer = document.getElementById('video-container')
+  if (videoContainer) {
+    videoContainer.style.display = 'none'
+  }
+
+  // Clear detection canvas
+  const canvas = document.getElementById('detection-canvas') as HTMLCanvasElement
+  if (canvas) {
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+    }
+  }
+
+  console.log('[ShadowNudge] Detection stopped, webcam released')
 }
 
 async function initializeApp(): Promise<void> {
@@ -212,8 +335,38 @@ async function initializeApp(): Promise<void> {
     updateStatusDisplay('Running')
     console.log('[ShadowNudge] App initialized successfully')
 
+    // Wire up start/stop button
+    const startBtn = document.getElementById('start-btn') as HTMLButtonElement
+    if (startBtn) {
+      startBtn.disabled = false
+      startBtn.textContent = 'Stop Monitoring'
+
+      startBtn.addEventListener('click', async () => {
+        if (detectionLoopRunning) {
+          // Stop monitoring
+          stopDetection(video)
+          updateStatusDisplay('Stopped - Camera off')
+          startBtn.textContent = 'Start Monitoring'
+        } else {
+          // Start monitoring
+          try {
+            updateStatusDisplay('Restarting webcam...')
+            const newVideo = await setupWebcam()
+            await startDetection(detector, newVideo)
+            updateStatusDisplay('Running')
+            startBtn.textContent = 'Stop Monitoring'
+          } catch (error) {
+            console.error('[ShadowNudge] Failed to restart monitoring:', error)
+            showErrorToast('Failed to restart webcam')
+            updateStatusDisplay('Stopped - Camera off')
+          }
+        }
+      })
+    }
+
     // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
+      stopDetection(video)
       detector.cleanup()
     })
   } catch (error) {

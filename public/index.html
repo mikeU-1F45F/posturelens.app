@@ -17,6 +17,20 @@
       </div>
       <div id="progress-text" class="progress-text"></div>
     </div>
+    
+    <div id="video-container" class="video-container" style="display: none;">
+      <div class="video-wrapper">
+        <video id="video-preview" autoplay playsinline></video>
+        <canvas id="detection-canvas"></canvas>
+      </div>
+      <div id="detection-status" class="detection-status">
+        <span class="status-label">Pose: <span id="pose-status">-</span></span>
+        <span class="status-label">Left Hand: <span id="left-hand-status">-</span></span>
+        <span class="status-label">Right Hand: <span id="right-hand-status">-</span></span>
+        <span class="status-label">Face: <span id="face-status">-</span></span>
+      </div>
+    </div>
+    
     <button id="capture-btn" disabled>Capture Reference Pose</button>
     <button id="start-btn" disabled>Start Monitoring</button>
     <div id="error-toast" class="error-toast"></div>
