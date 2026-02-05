@@ -78,6 +78,12 @@ Service worker caches all static assets including models. Version is embedded fr
 
 **Vanilla HTML/JS for MVP** - No frameworks. UI is minimal functional interface.
 
+**Video Preview** - Show webcam feed with visual detection indicators:
+- Live video feed displayed in UI
+- Bounding box overlays for detected body parts
+- Detection status labels (right hand, left hand, pose skeleton, face)
+- Provides visual feedback that MediaPipe is working correctly
+
 **Capture Mode First** - App launches in reference pose capture mode on every load. Persistent toggle available to re-capture (e.g., after moving closer, lighting changes, clothing changes).
 
 **Alert Behavior (MVP - Hard-Coded)**

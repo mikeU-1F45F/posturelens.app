@@ -83,7 +83,15 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [ ] Download holistic-full model binary (~12MB)
 - [ ] Place in `public/models/holistic-full.bin`
 - [ ] Update service worker to cache model
-- [ ] Add model loading progress UI
+- [x] Add model loading progress UI
+
+### 1.4 Video Preview & Detection Visualization
+- [ ] Add video element to display webcam feed
+- [ ] Add canvas overlay for drawing detection indicators
+- [ ] Draw bounding boxes around detected body parts
+- [ ] Display detection status labels (pose skeleton, left hand, right hand, face)
+- [ ] Show landmark counts below video feed
+- [ ] Add visual feedback when detection confidence is low
 
 **Dependencies**: Phase 0  
 **Outputs**: Running MediaPipe with webcam, console landmark output
