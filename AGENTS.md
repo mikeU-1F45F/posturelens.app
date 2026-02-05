@@ -24,6 +24,11 @@
 
 **Deployment**: Cloudflare Pages (static hosting) via Wrangler CLI
 
+**Review Workflow**: When pausing for review, always provide:
+- Command(s) to start services: `bun run dev` on port 3000
+- What to look for/verify in browser/console
+- Expected behavior vs. error conditions
+
 ## Core Technologies
 
 **MediaPipe Holistic** - C++/WASM binary for pose, hands, and face mesh tracking. Runs at 60-90 FPS entirely in-browser with WebGPU acceleration (Chrome 113+) or WASM fallback.

@@ -6,6 +6,8 @@ node_modules/
 *.js.map
 *.d.ts
 !public/sw.js
+!public/holistic.js
+!public/models/*.js
 public/main.js
 public/main.js.map
 out/
