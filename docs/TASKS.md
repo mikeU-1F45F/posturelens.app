@@ -27,37 +27,37 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 ## Phase 0: Foundation & Tooling
 
 ### 0.1 Repository Structure & Configuration
-- [ ] Initialize `package.json` with version 0.1.0
+- [x] Initialize `package.json` with version 0.1.0
   - Add TypeScript config
   - Add dev script: `bun run dev` (port 3000, serves `/public`)
   - Add build script: `bun run build`
-- [ ] Create `public/` directory structure
-- [ ] Create `src/core/`, `src/workers/` directories
-- [ ] Download MediaPipe holistic-lite model (~4MB) to `public/models/`
-- [ ] Add `wrangler.jsonc` for Cloudflare Pages deployment
-- [ ] Create `.gitignore` (exclude build artifacts, node_modules)
-- [ ] Create `README.md` with quickstart
+- [x] Create `public/` directory structure
+- [x] Create `src/core/`, `src/workers/` directories
+- [x] Download MediaPipe holistic-lite model (~4MB) to `public/models/`
+- [x] Add `wrangler.jsonc` for Cloudflare Pages deployment
+- [x] Create `.gitignore` (exclude build artifacts, node_modules)
+- [x] Create `README.md` with quickstart
 
 ### 0.2 Development Tooling
-- [ ] Configure TypeScript (`tsconfig.json`)
+- [x] Configure TypeScript (`tsconfig.json`)
   - Target: ES2022
   - Module: ESNext with bundler resolution
   - Strict: true (full strict mode)
   - Lib: DOM, DOM.Iterable, WebWorker, ES2022
-- [ ] Configure build pipeline (`bun build`)
+- [x] Configure build pipeline (`bun build`)
   - Entry: `src/main.ts`
   - Output: `public/main.js`
   - Minify: true
-- [ ] Add development server config: `bun run dev` serves `public/` on port 3000
+- [x] Add development server config: `bun run dev` serves `public/` on port 3000
 - **Note**: No testing framework - rely on TypeScript LSP only for MVP
 - **Note**: Hand-write service worker (no Workbox) for simpler control
 - **Runtime**: Bun for local dev, Cloudflare Pages for deployment
 
 ### 0.3 Core Project Files (Skeleton)
-- [ ] Create `src/main.ts` (empty shell with imports)
-- [ ] Create `public/index.html` (minimal vanilla JS shell)
-- [ ] Create `public/sw.js` (service worker skeleton)
-- [ ] Create placeholder files in `src/core/` and `src/workers/`
+- [x] Create `src/main.ts` (empty shell with imports)
+- [x] Create `public/index.html` (minimal vanilla JS shell)
+- [x] Create `public/sw.js` (service worker skeleton)
+- [x] Create placeholder files in `src/core/` and `src/workers/`
 
 **Dependencies**: None  
 **Outputs**: Working build pipeline, file structure
@@ -67,17 +67,17 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 ## Phase 1: Mobile Gate & MediaPipe Integration
 
 ### 1.1 Mobile Detection & Browser Warning
-- [ ] Implement UA detection in `src/main.ts` (block mobile)
-- [ ] Add browser capability detection (WebGPU, OffscreenCanvas, WASM)
-- [ ] Create warning UI for unsupported browsers (do not block, just warn)
-- [ ] Add console logging for debugging support issues
+- [x] Implement UA detection in `src/main.ts` (block mobile)
+- [x] Add browser capability detection (WebGPU, OffscreenCanvas, WASM)
+- [x] Create warning UI for unsupported browsers (do not block, just warn)
+- [x] Add console logging for debugging support issues
 
 ### 1.2 MediaPipe Integration Core
-- [ ] Install `@mediapipe/holistic` package
-- [ ] Create `src/core/detector.ts` wrapper class
-- [ ] Implement model loading from `/models/` directory
-- [ ] Add WebGPU detection and fallback logic
-- [ ] Implement frame decimation (every 3rd frame)
+- [x] Install `@mediapipe/holistic` package
+- [x] Create `src/core/detector.ts` wrapper class
+- [x] Implement model loading from `/models/` directory
+- [x] Add WebGPU detection and fallback logic
+- [x] Implement frame decimation (every 3rd frame)
 
 ### 1.3 Model Management
 - [ ] Download holistic-full model binary (~12MB)
