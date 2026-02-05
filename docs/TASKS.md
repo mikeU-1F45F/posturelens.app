@@ -86,12 +86,13 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [x] Add model loading progress UI
 
 ### 1.4 Video Preview & Detection Visualization
-- [ ] Add video element to display webcam feed
-- [ ] Add canvas overlay for drawing detection indicators
-- [ ] Draw bounding boxes around detected body parts
-- [ ] Display detection status labels (pose skeleton, left hand, right hand, face)
-- [ ] Show landmark counts below video feed
-- [ ] Add visual feedback when detection confidence is low
+- [x] Add video element to display webcam feed
+- [x] Add canvas overlay for drawing detection indicators
+- [x] Draw bounding boxes around detected body parts
+- [x] Display detection status labels (pose skeleton, left hand, right hand, face)
+- [x] Show landmark counts below video feed (moved to console.info for developers)
+- [x] Add visual feedback when detection confidence is low (emoji vs ✗)
+- [x] Implement Start/Stop Monitoring button with webcam privacy control
 
 **Dependencies**: Phase 0  
 **Outputs**: Running MediaPipe with webcam, console landmark output

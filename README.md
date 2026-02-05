@@ -14,11 +14,8 @@ ShadowNudge uses MediaPipe pose detection to monitor your posture and provide ge
 # Install dependencies
 bun install
 
-# Download MediaPipe model files (holistic-lite, ~4MB)
-mkdir -p public/models
-cd public/models
-# Download from: https://storage.googleapis.com/mediapipe-models/...
-# TODO: Add model download script
+# MediaPipe models are included in the repository
+# All assets (~26MB) are ready to use - no additional downloads needed
 ```
 
 ### Development
@@ -81,16 +78,20 @@ bun run deploy
 
 - **Local Processing**: All pose detection runs in-browser using WebGPU/WASM
 - **No Network**: After initial load, zero external requests
-- **Capture Mode**: Set reference pose on app launch
-- **Gentle Nudges**: Visual/audio alerts when posture deviates
+- **Privacy First**: Stop/Start monitoring with full webcam control
+- **Video Preview**: Live webcam feed with detection visualization
+  - Color-coded bounding boxes (pose, hands, face)
+  - Real-time detection status with emoji indicators
 - **Performance**: Frame decimation (1/3 frames) for 60-90 FPS
+- **First-time Download**: ~26MB (cached for offline use)
 
 ## Performance Notes
 
-- First load: ~30s (model download + WASM compilation)
-- Subsequent loads: <2s (from service worker cache)
-- Target: 60-90 FPS on modern laptops
-- Auto-switches to lite mode when battery <20%
+- First load: ~26MB download with progress indicator (models + WASM)
+- Subsequent loads: <2s (cached locally)
+- Detection: Every 3rd frame (~90ms intervals)
+- Stop monitoring: Webcam fully released, minimal CPU/GPU impact
+- Using lite model (modelComplexity: 0) for optimal performance
 
 ## Development Notes
 

@@ -30,9 +30,25 @@
 - What to look for/verify in browser/console
 - Expected behavior vs. error conditions
 
+**Session Notes** (2026-02-05):
+- User prefers to be in the loop during end-to-end testing
+- When pausing, provide next instructions for starting services and what to verify
+- Development philosophy documented: Make it work. Make it good. Make it performant.
+- User prefers the development philosophy: Make it work, make it good, make it performant. This should be noted in the AGENTS.md file. The current working approach accepts the ~26 MB size for first-time download, but the UI should show a progress bar with a note indicating this is a first-time download.
+
+**Commit Workflow**:
+- Pause before committing to allow user review and approval
+- User wants to stay connected to the commit process
+- Present changes and commit message for approval before executing
+
 ## Core Technologies
 
 **MediaPipe Holistic** - C++/WASM binary for pose, hands, and face mesh tracking. Runs at 60-90 FPS entirely in-browser with WebGPU acceleration (Chrome 113+) or WASM fallback.
+- Loaded via script tag in HTML (`public/holistic.js`)
+- Accessed through `window.Holistic` global object
+- Models and loaders must be copied from node_modules to `public/models/`
+- Required files: holistic.js, holistic.binarypb, *_loader.js, *_wasm_bin.js, *.wasm, *.tflite
+- Total assets: ~26MB committed to repo for local-first operation
 
 **OffscreenCanvas Worker** - Moves ghost rendering to background thread to avoid main thread blocking during long sessions.
 
