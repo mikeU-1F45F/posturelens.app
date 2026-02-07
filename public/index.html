@@ -9,40 +9,45 @@
 </head>
 <body>
   <div id="app">
-    <h1>ShadowNudge</h1>
-    <div id="status">Loading...</div>
+    <header class="app-header">
+      <h1>ShadowNudge</h1>
+      <div id="status">Loading...</div>
+    </header>
+
     <div id="progress-container" class="progress-container" style="display: none;">
       <div class="progress-bar">
         <div id="progress-fill" class="progress-fill"></div>
       </div>
       <div id="progress-text" class="progress-text"></div>
     </div>
-    
-    <div id="video-container" class="video-container" style="display: none;">
-      <div class="video-wrapper">
-        <video id="video-preview" autoplay playsinline></video>
-        <canvas id="detection-canvas"></canvas>
-      </div>
-      <div id="detection-status" class="detection-status">
-        <span class="status-label">Pose: <span id="pose-status">-</span></span>
-        <span class="status-label">Left Hand: <span id="left-hand-status">-</span></span>
-        <span class="status-label">Right Hand: <span id="right-hand-status">-</span></span>
-        <span class="status-label">Face: <span id="face-status">-</span></span>
-      </div>
-    </div>
 
-    <div id="reference-status" class="reference-status" aria-live="polite"></div>
-    
-    <div class="button-group">
-      <button id="capture-btn" disabled>Capture Reference Pose</button>
-      <button id="start-btn" disabled>Start Monitoring</button>
-    </div>
+    <div class="main-layout">
+      <div id="video-container" class="video-container">
+        <div class="video-wrapper">
+          <video id="video-preview" autoplay playsinline></video>
+          <canvas id="detection-canvas"></canvas>
+        </div>
+        <div id="detection-status" class="detection-status">
+          <span class="status-label">Pose: <span id="pose-status">-</span></span>
+          <span class="status-label">L Hand: <span id="left-hand-status">-</span></span>
+          <span class="status-label">R Hand: <span id="right-hand-status">-</span></span>
+          <span class="status-label">Face: <span id="face-status">-</span></span>
+        </div>
+      </div>
 
-    <p class="privacy-notice" role="note">
-      🔒 Your privacy is respected. No photos taken, retained, or transmitted.
-      All calculations are numeric only and stored locally in this browser.
-    </p>
-    <a id="clear-data-link" href="#" class="clear-data-link">Clear all local data</a>
+      <aside class="controls-panel">
+        <div id="reference-status" class="reference-status" aria-live="polite"></div>
+        <div class="button-group">
+          <button id="capture-btn" disabled>Capture Reference Pose</button>
+          <button id="start-btn" disabled>Start Monitoring</button>
+        </div>
+        <p class="privacy-notice" role="note">
+          🔒 No photos taken, retained, or transmitted.
+          All data stays local to this browser.
+        </p>
+        <a id="clear-data-link" href="#" class="clear-data-link">Clear all local data</a>
+      </aside>
+    </div>
 
     <div id="toast" class="toast"></div>
   </div>
