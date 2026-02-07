@@ -40,6 +40,8 @@
 - Pause before committing to allow user review and approval
 - User wants to stay connected to the commit process
 - Present changes and commit message for approval before executing
+- Single-line commit messages only — no extended body, no co-author signatures
+- Use conventional commit style messages with the prefix but no scope Good-- `feat: added new function` Bad-- `feat(detector): added new function \r\n -Did this thing or that thing`
 
 ## Core Technologies
 
