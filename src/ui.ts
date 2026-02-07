@@ -65,6 +65,19 @@ export function updateDetectionStatus(label: string, detected: boolean, emoji: s
   }
 }
 
+const DETECTION_LABELS = ['pose', 'left-hand', 'right-hand', 'face'] as const
+
+/** Resets all detection status labels to their initial "-" state */
+export function resetDetectionStatus(): void {
+  for (const label of DETECTION_LABELS) {
+    const el = document.getElementById(`${label}-status`)
+    if (el) {
+      el.textContent = '-'
+      el.style.color = ''
+    }
+  }
+}
+
 /** Updates the reference status display with ISO date or "no reference" message */
 export function updateReferenceStatus(ref: ReferencePose | null): void {
   const refStatus = document.getElementById('reference-status')

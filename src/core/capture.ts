@@ -84,6 +84,11 @@ export async function captureReferencePose(
   captureBuffer.length = 0
   isCapturing = true
 
+  // Pre-countdown instruction
+  setCaptureOverlayText('🧘')
+  updateStatusDisplay('Good posture please...')
+  await new Promise((resolve) => setTimeout(resolve, 1500))
+
   // Countdown: 3... 2... 1...
   for (let i = 3; i > 0; i--) {
     setCaptureOverlayText(String(i))

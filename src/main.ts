@@ -23,6 +23,7 @@ import { Detector } from './core/detector.ts'
 import { clearAllData, loadReference, type ReferencePose } from './core/reference-store.ts'
 import {
   hideProgress,
+  resetDetectionStatus,
   showErrorToast,
   showProgress,
   showSuccessToast,
@@ -41,8 +42,7 @@ let detectionLoopRunning = false
 let animationFrameId: number | null = null
 let currentReference: ReferencePose | null = null
 
-/** Cached detection canvas and context (queried once, used every frame) */
-let detectionCanvas: HTMLCanvasElement | null = null
+/** Cached detection canvas context (queried once in initializeApp, used every frame) */
 let detectionCtx: CanvasRenderingContext2D | null = null
 
 // ---------------------------------------------------------------------------
@@ -61,18 +61,6 @@ async function setupWebcam(): Promise<HTMLVideoElement> {
       audio: false,
     })
     videoPreview.srcObject = stream
-
-    const videoContainer = document.getElementById('video-container')
-    if (videoContainer) {
-      videoContainer.style.display = 'block'
-    }
-
-    detectionCanvas = document.getElementById('detection-canvas') as HTMLCanvasElement
-    if (detectionCanvas) {
-      detectionCanvas.width = 640
-      detectionCanvas.height = 480
-      detectionCtx = detectionCanvas.getContext('2d')
-    }
 
     console.info('[ShadowNudge] Webcam stream acquired')
     return videoPreview
@@ -165,15 +153,11 @@ function stopDetection(video: HTMLVideoElement): void {
     video.srcObject = null
   }
 
-  const videoContainer = document.getElementById('video-container')
-  if (videoContainer) {
-    videoContainer.style.display = 'none'
-  }
-
   if (detectionCtx) {
     detectionCtx.clearRect(0, 0, detectionCtx.canvas.width, detectionCtx.canvas.height)
   }
 
+  resetDetectionStatus()
   console.info('[ShadowNudge] Detection stopped, webcam released')
 }
 
@@ -209,6 +193,14 @@ async function initializeApp(): Promise<void> {
     }
   } else {
     console.debug('[ShadowNudge] All capabilities supported')
+  }
+
+  // Cache canvas reference (container is always in DOM)
+  const detectionCanvas = document.getElementById('detection-canvas') as HTMLCanvasElement
+  if (detectionCanvas) {
+    detectionCanvas.width = 640
+    detectionCanvas.height = 480
+    detectionCtx = detectionCanvas.getContext('2d')
   }
 
   try {
