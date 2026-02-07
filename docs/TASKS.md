@@ -130,8 +130,8 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [x] Show reference status (loaded from storage vs. needs capture) with ISO date
 - [x] Add "Clear all local data" link (stops webcam, deletes IndexedDB, resets UI, shows success toast)
 - [x] Add ARIA live region for reference status
-- [ ] Add basic CSS (accessibility: high contrast, keyboard nav)
-- [ ] Add ARIA labels for screen readers
+- [x] Add basic CSS (accessibility: high contrast, keyboard nav)
+- [x] Add ARIA labels for screen readers
 
 **Dependencies**: Phase 1  
 **Outputs**: Can capture and save reference pose, see it in UI

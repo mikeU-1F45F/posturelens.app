@@ -14,20 +14,20 @@
       <div id="status">Loading...</div>
     </header>
 
-    <div id="progress-container" class="progress-container" style="display: none;">
-      <div class="progress-bar">
+    <div id="progress-container" class="progress-container" style="display: none;" role="group" aria-label="Loading progress">
+      <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
         <div id="progress-fill" class="progress-fill"></div>
       </div>
-      <div id="progress-text" class="progress-text"></div>
+      <div id="progress-text" class="progress-text" aria-live="polite"></div>
     </div>
 
     <div class="main-layout">
       <div id="video-container" class="video-container">
         <div class="video-wrapper">
-          <video id="video-preview" autoplay playsinline></video>
-          <canvas id="detection-canvas"></canvas>
+          <video id="video-preview" autoplay playsinline aria-label="Webcam preview"></video>
+          <canvas id="detection-canvas" aria-hidden="true"></canvas>
         </div>
-        <div id="detection-status" class="detection-status">
+        <div id="detection-status" class="detection-status" aria-label="Detection status">
           <span class="status-label">Pose: <span id="pose-status">-</span></span>
           <span class="status-label">L Hand: <span id="left-hand-status">-</span></span>
           <span class="status-label">R Hand: <span id="right-hand-status">-</span></span>
@@ -37,9 +37,9 @@
 
       <aside class="controls-panel">
         <div id="reference-status" class="reference-status" aria-live="polite"></div>
-        <div class="button-group">
-          <button id="capture-btn" disabled>Capture Reference Pose</button>
-          <button id="start-btn" disabled>Start Monitoring</button>
+        <div class="button-group" role="group" aria-label="Monitoring controls">
+          <button id="capture-btn" disabled aria-label="Capture reference pose">Capture Reference Pose</button>
+          <button id="start-btn" disabled aria-label="Start monitoring">Start Monitoring</button>
         </div>
         <p class="privacy-notice" role="note">
           🔒 No photos taken, retained, or transmitted.
@@ -49,10 +49,10 @@
       </aside>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
   </div>
   
-  <canvas id="ghost-canvas"></canvas>
+  <canvas id="ghost-canvas" aria-hidden="true"></canvas>
   
   <script src="/main.js"></script>
 </body>

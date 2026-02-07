@@ -15,12 +15,14 @@ export function showProgress(message: string, percent?: number): void {
   const progressContainer = document.getElementById('progress-container')
   const progressFill = document.getElementById('progress-fill')
   const progressText = document.getElementById('progress-text')
+  const progressBar = progressFill?.parentElement
 
   if (progressContainer && progressFill && progressText) {
     progressContainer.style.display = 'block'
     progressText.textContent = message
     if (percent !== undefined) {
       progressFill.style.width = `${percent}%`
+      progressBar?.setAttribute('aria-valuenow', String(percent))
     }
   }
 }
