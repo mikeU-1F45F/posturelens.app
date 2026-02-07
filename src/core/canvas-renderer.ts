@@ -1,5 +1,7 @@
 // Canvas rendering — shoulder triangle, bounding boxes, capture overlay
 
+import { LANDMARK_LEFT_SHOULDER, LANDMARK_NOSE, LANDMARK_RIGHT_SHOULDER } from './landmarks.ts'
+
 /** Text overlay drawn on the detection canvas during capture (countdown, checkmark) */
 let overlayText = ''
 
@@ -51,9 +53,9 @@ export function drawShoulderTriangle(
   ctx: CanvasRenderingContext2D,
   poseLandmarks: Array<{ x: number; y: number; z?: number }>,
 ): void {
-  const nose = poseLandmarks[0]
-  const leftShoulder = poseLandmarks[11]
-  const rightShoulder = poseLandmarks[12]
+  const nose = poseLandmarks[LANDMARK_NOSE]
+  const leftShoulder = poseLandmarks[LANDMARK_LEFT_SHOULDER]
+  const rightShoulder = poseLandmarks[LANDMARK_RIGHT_SHOULDER]
 
   if (!nose || !leftShoulder || !rightShoulder) return
 

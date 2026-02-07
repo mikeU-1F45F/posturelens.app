@@ -177,12 +177,10 @@ button:hover:not(:disabled) {
   color: rgba(255, 255, 255, 0.7);
 }
 
-.error-toast {
+.toast {
   position: fixed;
   bottom: 1rem;
   right: 1rem;
-  background-color: var(--error-color);
-  color: white;
   padding: 1rem;
   border-radius: 0.5rem;
   display: none;
@@ -190,8 +188,18 @@ button:hover:not(:disabled) {
   z-index: 1000;
 }
 
-.error-toast.show {
+.toast.show {
   display: block;
+}
+
+.toast--error {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.toast--success {
+  background-color: var(--accent-color);
+  color: var(--bg-color);
 }
 
 #ghost-canvas {

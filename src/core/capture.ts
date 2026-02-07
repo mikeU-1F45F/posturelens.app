@@ -7,6 +7,7 @@ import {
   updateStatusDisplay,
 } from '../ui.ts'
 import { setCaptureOverlayText } from './canvas-renderer.ts'
+import { LANDMARK_LEFT_SHOULDER, LANDMARK_NOSE, LANDMARK_RIGHT_SHOULDER } from './landmarks.ts'
 import {
   calculateTriangleRatio,
   type Landmark,
@@ -37,9 +38,9 @@ export function getCaptureBuffer(): typeof captureBuffer {
 export function extractTriangleLandmarks(
   poseLandmarks: Array<{ x: number; y: number; z?: number }>,
 ): { nose: Landmark; leftShoulder: Landmark; rightShoulder: Landmark } | null {
-  const nose = poseLandmarks[0]
-  const leftShoulder = poseLandmarks[11]
-  const rightShoulder = poseLandmarks[12]
+  const nose = poseLandmarks[LANDMARK_NOSE]
+  const leftShoulder = poseLandmarks[LANDMARK_LEFT_SHOULDER]
+  const rightShoulder = poseLandmarks[LANDMARK_RIGHT_SHOULDER]
 
   if (!nose || !leftShoulder || !rightShoulder) return null
 

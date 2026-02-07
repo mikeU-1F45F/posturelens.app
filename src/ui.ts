@@ -33,32 +33,27 @@ export function hideProgress(): void {
   }
 }
 
+/** Shows a toast message with the given variant and auto-dismiss duration */
+function showToast(message: string, variant: 'error' | 'success', durationMs: number): void {
+  const toast = document.getElementById('toast')
+  if (!toast) return
+
+  toast.textContent = message
+  toast.classList.remove('toast--error', 'toast--success')
+  toast.classList.add(`toast--${variant}`, 'show')
+  setTimeout(() => {
+    toast.classList.remove('show')
+  }, durationMs)
+}
+
 /** Shows a red error toast for 5 seconds */
 export function showErrorToast(message: string): void {
-  const toast = document.getElementById('error-toast')
-  if (toast) {
-    toast.textContent = message
-    toast.style.display = 'block'
-    setTimeout(() => {
-      toast.style.display = 'none'
-    }, 5000)
-  }
+  showToast(message, 'error', 5000)
 }
 
 /** Shows a green success toast for 3 seconds */
 export function showSuccessToast(message: string): void {
-  const toast = document.getElementById('error-toast')
-  if (toast) {
-    toast.textContent = message
-    toast.style.backgroundColor = '#00ff88'
-    toast.style.color = '#0a0a0a'
-    toast.style.display = 'block'
-    setTimeout(() => {
-      toast.style.display = 'none'
-      toast.style.backgroundColor = ''
-      toast.style.color = ''
-    }, 3000)
-  }
+  showToast(message, 'success', 3000)
 }
 
 /** Updates a detection status label (pose, left-hand, right-hand, face) */
@@ -93,11 +88,6 @@ export function syncStartButton(
   detectionRunning: boolean,
   hasReference: boolean,
 ): void {
-  if (detectionRunning) {
-    startBtn.textContent = 'Stop Monitoring'
-    startBtn.disabled = !hasReference
-  } else {
-    startBtn.textContent = 'Start Monitoring'
-    startBtn.disabled = !hasReference
-  }
+  startBtn.textContent = detectionRunning ? 'Stop Monitoring' : 'Start Monitoring'
+  startBtn.disabled = !hasReference
 }

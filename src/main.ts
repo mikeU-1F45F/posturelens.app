@@ -41,6 +41,10 @@ let detectionLoopRunning = false
 let animationFrameId: number | null = null
 let currentReference: ReferencePose | null = null
 
+/** Cached detection canvas and context (queried once, used every frame) */
+let detectionCanvas: HTMLCanvasElement | null = null
+let detectionCtx: CanvasRenderingContext2D | null = null
+
 // ---------------------------------------------------------------------------
 // Webcam
 // ---------------------------------------------------------------------------
@@ -63,10 +67,11 @@ async function setupWebcam(): Promise<HTMLVideoElement> {
       videoContainer.style.display = 'block'
     }
 
-    const canvas = document.getElementById('detection-canvas') as HTMLCanvasElement
-    if (canvas) {
-      canvas.width = 640
-      canvas.height = 480
+    detectionCanvas = document.getElementById('detection-canvas') as HTMLCanvasElement
+    if (detectionCanvas) {
+      detectionCanvas.width = 640
+      detectionCanvas.height = 480
+      detectionCtx = detectionCanvas.getContext('2d')
     }
 
     console.info('[ShadowNudge] Webcam stream acquired')
@@ -116,12 +121,10 @@ function onDetectorResults(results: Results): void {
   updateDetectionStatus('face', faceLandmarks > 0, '\uD83D\uDE0A')
 
   // Draw detection overlays
-  const canvas = document.getElementById('detection-canvas') as HTMLCanvasElement
-  if (!canvas) return
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
+  if (!detectionCtx) return
+  const ctx = detectionCtx
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
   if (results.poseLandmarks) drawShoulderTriangle(ctx, results.poseLandmarks)
   if (results.leftHandLandmarks) drawBoundingBox(ctx, results.leftHandLandmarks, '#ff4444')
@@ -167,10 +170,8 @@ function stopDetection(video: HTMLVideoElement): void {
     videoContainer.style.display = 'none'
   }
 
-  const canvas = document.getElementById('detection-canvas') as HTMLCanvasElement
-  if (canvas) {
-    const ctx = canvas.getContext('2d')
-    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
+  if (detectionCtx) {
+    detectionCtx.clearRect(0, 0, detectionCtx.canvas.width, detectionCtx.canvas.height)
   }
 
   console.info('[ShadowNudge] Detection stopped, webcam released')
