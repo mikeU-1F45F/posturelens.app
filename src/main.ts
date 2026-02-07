@@ -172,6 +172,70 @@ function drawBoundingBox(
   ctx.strokeRect(x, y, w, h)
 }
 
+/**
+ * Draws the shoulder triangle (nose → left shoulder → right shoulder) on the canvas.
+ * This triangle is the primary visual indicator for shoulder rounding detection.
+ * The ratio of shoulder_width / shoulder_midpoint_to_nose_distance serves as
+ * a proxy metric for forward shoulder rounding (Z-axis foreshortening).
+ */
+function drawShoulderTriangle(
+  ctx: CanvasRenderingContext2D,
+  poseLandmarks: Array<{ x: number; y: number; z?: number }>,
+): void {
+  // Landmark indices: 0 = nose, 11 = left shoulder, 12 = right shoulder
+  const nose = poseLandmarks[0]
+  const leftShoulder = poseLandmarks[11]
+  const rightShoulder = poseLandmarks[12]
+
+  if (!nose || !leftShoulder || !rightShoulder) return
+
+  const w = ctx.canvas.width
+  const h = ctx.canvas.height
+
+  // Convert normalized coordinates to canvas pixels
+  const noseX = nose.x * w
+  const noseY = nose.y * h
+  const lShoulderX = leftShoulder.x * w
+  const lShoulderY = leftShoulder.y * h
+  const rShoulderX = rightShoulder.x * w
+  const rShoulderY = rightShoulder.y * h
+
+  // Draw triangle
+  ctx.beginPath()
+  ctx.moveTo(noseX, noseY)
+  ctx.lineTo(lShoulderX, lShoulderY)
+  ctx.lineTo(rShoulderX, rShoulderY)
+  ctx.closePath()
+
+  ctx.strokeStyle = '#00ff88'
+  ctx.lineWidth = 2
+  ctx.stroke()
+
+  // Semi-transparent fill for visibility
+  ctx.fillStyle = 'rgba(0, 255, 136, 0.08)'
+  ctx.fill()
+
+  // Draw landmark dots
+  const dotRadius = 4
+  for (const [x, y] of [
+    [noseX, noseY],
+    [lShoulderX, lShoulderY],
+    [rShoulderX, rShoulderY],
+  ]) {
+    ctx.beginPath()
+    ctx.arc(x, y, dotRadius, 0, Math.PI * 2)
+    ctx.fillStyle = '#00ff88'
+    ctx.fill()
+  }
+
+  // Log Z-coordinates for depth analysis (secondary signal)
+  if (nose.z !== undefined && leftShoulder.z !== undefined && rightShoulder.z !== undefined) {
+    console.debug(
+      `[Shoulder Z] nose: ${nose.z.toFixed(4)}, L: ${leftShoulder.z.toFixed(4)}, R: ${rightShoulder.z.toFixed(4)}`,
+    )
+  }
+}
+
 function updateDetectionStatus(label: string, detected: boolean, emoji: string): void {
   const statusElement = document.getElementById(`${label}-status`)
   if (statusElement) {
@@ -180,7 +244,17 @@ function updateDetectionStatus(label: string, detected: boolean, emoji: string):
   }
 }
 
+/** Tracks whether the first detection result has been received after starting */
+let firstDetectionReceived = false
+
 function onDetectorResults(results: Results): void {
+  // Transition from "Initializing detection..." to "Running" on first result
+  if (!firstDetectionReceived) {
+    firstDetectionReceived = true
+    updateStatusDisplay('Running')
+    console.info('[ShadowNudge] First detection received, status: Running')
+  }
+
   const poseLandmarks = results.poseLandmarks?.length ?? 0
   const leftHandLandmarks = results.leftHandLandmarks?.length ?? 0
   const rightHandLandmarks = results.rightHandLandmarks?.length ?? 0
@@ -197,7 +271,7 @@ function onDetectorResults(results: Results): void {
   updateDetectionStatus('right-hand', rightHandLandmarks > 0, '🤚')
   updateDetectionStatus('face', faceLandmarks > 0, '😊')
 
-  // Draw bounding boxes
+  // Draw detection overlays
   const canvas = document.getElementById('detection-canvas') as HTMLCanvasElement
   if (!canvas) return
 
@@ -207,10 +281,11 @@ function onDetectorResults(results: Results): void {
   // Clear canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  // Draw boxes for detected parts
+  // Draw shoulder triangle (replaces torso bounding box)
   if (results.poseLandmarks) {
-    drawBoundingBox(ctx, results.poseLandmarks, '#00ff88') // Green for pose
+    drawShoulderTriangle(ctx, results.poseLandmarks)
   }
+  // Keep hand and face bounding boxes
   if (results.leftHandLandmarks) {
     drawBoundingBox(ctx, results.leftHandLandmarks, '#ff4444') // Red for left hand
   }
@@ -243,6 +318,7 @@ async function startDetection(detector: Detector, video: HTMLVideoElement): Prom
 
 function stopDetection(video: HTMLVideoElement): void {
   detectionLoopRunning = false
+  firstDetectionReceived = false
   if (animationFrameId !== null) {
     cancelAnimationFrame(animationFrameId)
     animationFrameId = null
@@ -328,11 +404,12 @@ async function initializeApp(): Promise<void> {
     const video = await setupWebcam()
     showProgress('Camera ready', 90)
 
-    updateStatusDisplay('Starting detection...')
+    updateStatusDisplay('Initializing detection...')
     await startDetection(detector, video)
 
     hideProgress()
-    updateStatusDisplay('Running')
+    // Status will transition to "Running" when first detection result arrives
+    // (see onDetectorResults)
     console.info('[ShadowNudge] App initialized successfully')
 
     // Wire up start/stop button
@@ -352,8 +429,8 @@ async function initializeApp(): Promise<void> {
           try {
             updateStatusDisplay('Restarting webcam...')
             const newVideo = await setupWebcam()
+            updateStatusDisplay('Initializing detection...')
             await startDetection(detector, newVideo)
-            updateStatusDisplay('Running')
             startBtn.textContent = 'Stop Monitoring'
           } catch (error) {
             console.error('[ShadowNudge] Failed to restart monitoring:', error)
