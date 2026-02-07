@@ -2,7 +2,7 @@
 
 import { build } from 'bun'
 
-console.log('Building ShadowNudge...')
+console.info('Building ShadowNudge...')
 
 const result = await build({
   entrypoints: ['./src/main.ts'],
@@ -16,7 +16,7 @@ const result = await build({
 })
 
 if (result.success) {
-  console.log('✅ Build complete: public/main.js')
+  console.info('✅ Build complete: public/main.js')
 } else {
   console.error('❌ Build failed:', result.logs)
   process.exit(1)

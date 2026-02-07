@@ -18,11 +18,11 @@ const server = Bun.serve({
   },
 })
 
-console.log(`🚀 Dev server running at http://localhost:${server.port}`)
-console.log('Serving static files from ./public')
-console.log('Hot reload enabled for TypeScript changes')
+console.info(`🚀 Dev server running at http://localhost:${server.port}`)
+console.info('Serving static files from ./public')
+console.info('Hot reload enabled for TypeScript changes')
 
 process.on('SIGINT', () => {
-  console.log('\n👋 Shutting down dev server')
+  console.info('\n👋 Shutting down dev server')
   process.exit(0)
 })

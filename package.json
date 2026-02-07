@@ -7,9 +7,9 @@
     "dev": "bun --hot run dev-server.ts",
     "build": "bun run build.ts",
     "deploy": "bun run build && wrangler pages deploy public",
-    "check": "biome check .",
-    "format": "biome format --write .",
-    "lint": "biome lint .",
+    "check": "biome check src build.ts dev-server.ts index.ts public/sw.js",
+    "format": "biome format --write src build.ts dev-server.ts index.ts public/sw.js",
+    "lint": "biome lint src build.ts dev-server.ts index.ts public/sw.js",
     "precommit": "bun run format && bun run check"
   },
   "devDependencies": {

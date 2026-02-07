@@ -9,7 +9,7 @@ const PRECACHE_URLS = ['/', '/index.html', '/main.js', '/models/holistic-lite.bi
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Precaching app shell')
+      console.info('[SW] Precaching app shell')
       return cache.addAll(PRECACHE_URLS)
     }),
   )
@@ -23,7 +23,7 @@ self.addEventListener('activate', (event) => {
         cacheNames
           .filter((cacheName) => cacheName !== CACHE_NAME)
           .map((cacheName) => {
-            console.log('[SW] Deleting old cache:', cacheName)
+            console.info('[SW] Deleting old cache:', cacheName)
             return caches.delete(cacheName)
           }),
       )

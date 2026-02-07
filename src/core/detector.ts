@@ -33,7 +33,7 @@ export class Detector {
 
   constructor(config: DetectorConfig = {}) {
     this.config = {
-      modelComplexity: config.modelComplexity ?? 1,
+      modelComplexity: config.modelComplexity ?? 0,
       smoothLandmarks: config.smoothLandmarks ?? true,
       minDetectionConfidence: config.minDetectionConfidence ?? 0.5,
       minTrackingConfidence: config.minTrackingConfidence ?? 0.5,
@@ -45,8 +45,8 @@ export class Detector {
       wasm: typeof WebAssembly === 'object',
     }
 
-    console.log('[Detector] Initialized with config:', this.config)
-    console.log('[Detector] Capabilities:', this.capabilities)
+    console.debug('[Detector] Initialized with config:', this.config)
+    console.debug('[Detector] Capabilities:', this.capabilities)
   }
 
   async loadModel(): Promise<void> {
@@ -75,7 +75,7 @@ export class Detector {
       this.holistic.onResults(this.onResultsCallback)
     }
 
-    console.log('[Detector] Model loaded successfully')
+    console.info('[Detector] Model loaded successfully')
   }
 
   onResults(callback: (results: Results) => void): void {
@@ -110,7 +110,7 @@ export class Detector {
         minTrackingConfidence: this.config.minTrackingConfidence,
         enableSegmentation: this.config.enableSegmentation,
       })
-      console.log('[Detector] Config updated:', this.config)
+      console.info('[Detector] Config updated:', this.config)
     }
   }
 
@@ -119,7 +119,7 @@ export class Detector {
       throw new Error('[Detector] Frame decimation must be >= 1')
     }
     this.frameDecimation = decimation
-    console.log(`[Detector] Frame decimation set to: ${decimation}`)
+    console.info(`[Detector] Frame decimation set to: ${decimation}`)
   }
 
   getCapabilities(): DetectorCapabilities {
@@ -130,7 +130,7 @@ export class Detector {
     if (this.holistic) {
       this.holistic.close()
       this.holistic = null
-      console.log('[Detector] Cleanup complete')
+      console.info('[Detector] Cleanup complete')
     }
   }
 }

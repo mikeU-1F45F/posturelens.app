@@ -94,7 +94,7 @@ async function setupWebcam(): Promise<HTMLVideoElement> {
       canvas.height = 480
     }
 
-    console.log('[ShadowNudge] Webcam stream acquired')
+    console.info('[ShadowNudge] Webcam stream acquired')
     return videoPreview
   } catch (error) {
     console.error('[ShadowNudge] Webcam access failed:', error)
@@ -186,8 +186,8 @@ function onDetectorResults(results: Results): void {
   const rightHandLandmarks = results.rightHandLandmarks?.length ?? 0
   const faceLandmarks = results.faceLandmarks?.length ?? 0
 
-  // Console logging for developers
-  console.info(
+  // Console logging for developers (debug-level because this can be very noisy)
+  console.debug(
     `[Detector] Landmarks - Pose: ${poseLandmarks}, Left Hand: ${leftHandLandmarks}, Right Hand: ${rightHandLandmarks}, Face: ${faceLandmarks}`,
   )
 
@@ -238,7 +238,7 @@ async function startDetection(detector: Detector, video: HTMLVideoElement): Prom
     animationFrameId = requestAnimationFrame(processNextFrame)
   }
   animationFrameId = requestAnimationFrame(processNextFrame)
-  console.log('[ShadowNudge] Detection loop started')
+  console.info('[ShadowNudge] Detection loop started')
 }
 
 function stopDetection(video: HTMLVideoElement): void {
@@ -272,13 +272,13 @@ function stopDetection(video: HTMLVideoElement): void {
     }
   }
 
-  console.log('[ShadowNudge] Detection stopped, webcam released')
+  console.info('[ShadowNudge] Detection stopped, webcam released')
 }
 
 async function initializeApp(): Promise<void> {
   const capabilities = detectBrowserCapabilities()
 
-  console.log('[ShadowNudge] Browser capabilities:', capabilities)
+  console.debug('[ShadowNudge] Browser capabilities:', capabilities)
 
   // Hard block on mobile devices
   if (capabilities.mobile) {
@@ -307,7 +307,7 @@ async function initializeApp(): Promise<void> {
       displayCapabilityWarning(missingCapabilities)
     }
   } else {
-    console.log('[ShadowNudge] All capabilities supported')
+    console.debug('[ShadowNudge] All capabilities supported')
   }
 
   // Initialize detector
@@ -333,7 +333,7 @@ async function initializeApp(): Promise<void> {
 
     hideProgress()
     updateStatusDisplay('Running')
-    console.log('[ShadowNudge] App initialized successfully')
+    console.info('[ShadowNudge] App initialized successfully')
 
     // Wire up start/stop button
     const startBtn = document.getElementById('start-btn') as HTMLButtonElement
@@ -376,5 +376,5 @@ async function initializeApp(): Promise<void> {
   }
 }
 
-console.log('ShadowNudge loading...')
+console.info('[ShadowNudge] Loading...')
 document.addEventListener('DOMContentLoaded', initializeApp)
