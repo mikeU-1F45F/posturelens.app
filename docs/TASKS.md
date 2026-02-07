@@ -93,10 +93,10 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [x] Implement Start/Stop Monitoring button with webcam privacy control
 
 ### 1.5 Shoulder Triangle & Detection Init
-- [ ] Replace torso bounding box with shoulder triangle (nose→L shoulder→R shoulder)
-- [ ] Keep hand and face bounding boxes
-- [ ] Add Z-coordinate debug logging for shoulder landmarks
-- [ ] Add "Initializing detection..." status between camera ready and "Running"
+- [x] Replace torso bounding box with shoulder triangle (nose→L shoulder→R shoulder)
+- [x] Keep hand and face bounding boxes
+- [x] Add Z-coordinate debug logging for shoulder landmarks
+- [x] Add "Initializing detection..." status between camera ready and "Running"
 
 **Dependencies**: Phase 0  
 **Outputs**: Running MediaPipe with webcam, console landmark output
@@ -107,24 +107,27 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 
 ### 2.1 IndexedDB Reference Store
 - [ ] Create `src/core/reference-store.ts`
+- [ ] Store triangle landmarks (nose, L shoulder, R shoulder) + computed ratio only
 - [ ] Implement save/load reference pose (single pose)
 - [ ] Add IndexedDB schema versioning
 - [ ] Handle initial state (no reference captured)
 
 ### 2.2 Capture Mode UI Flow
-- [ ] App launches in capture mode on every load
-- [ ] Wire up "Capture Reference" button with countdown
-- [ ] Store landmarks from stable frame
-- [ ] Handle capture errors (bad pose, partial detection)
-- [ ] Add persistent toggle to re-capture reference
+- [ ] On load: check IndexedDB for existing reference
+  - If no reference: require 3-second capture before monitoring can start
+  - If reference exists: show "Reference pose loaded" status, enable monitoring immediately
+- [ ] Wire up "Capture Reference" button with 3-second countdown
+  - Instruction: "Sit in your normal working position with good posture and hold still"
+  - Average triangle landmarks across ~3 seconds of frames for stable reference
+  - Require all 3 triangle landmarks detected for duration
+- [ ] Handle capture errors (landmarks lost mid-capture, partial detection)
+- [ ] Existing capture button serves as re-capture trigger (for lighting/position changes)
 
-### 2.3 Basic UI Shell
-- [ ] Create minimal vanilla JS interface
-  - Capture reference pose button
-  - Start/stop monitoring button
-  - Status display area
+### 2.3 Basic UI Shell & Privacy Notice
+- [ ] Add privacy disclaimer visible on page: no photos retained or transmitted, all calculations numeric-only, stored locally in this browser
+- [ ] Wire up existing capture/start buttons to new capture flow
+- [ ] Show reference status (loaded from storage vs. needs capture)
 - [ ] Add basic CSS (accessibility: high contrast, keyboard nav)
-- [ ] Make UI responsive to landmark data
 - [ ] Add ARIA labels for screen readers
 
 **Dependencies**: Phase 1  
