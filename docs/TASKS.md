@@ -1,7 +1,7 @@
 # ShadowNudge Development Tasks & Milestones
 
 **Version**: 0.1.0-MVP  
-**Last Updated**: 2026-01-18
+**Last Updated**: 2026-02-07
 
 ---
 
@@ -87,11 +87,16 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 ### 1.4 Video Preview & Detection Visualization
 - [x] Add video element to display webcam feed
 - [x] Add canvas overlay for drawing detection indicators
-- [x] Draw bounding boxes around detected body parts
 - [x] Display detection status labels (pose skeleton, left hand, right hand, face)
 - [x] Show landmark counts below video feed (moved to console.info for developers)
 - [x] Add visual feedback when detection confidence is low (emoji vs ✗)
 - [x] Implement Start/Stop Monitoring button with webcam privacy control
+
+### 1.5 Shoulder Triangle & Detection Init
+- [ ] Replace torso bounding box with shoulder triangle (nose→L shoulder→R shoulder)
+- [ ] Keep hand and face bounding boxes
+- [ ] Add Z-coordinate debug logging for shoulder landmarks
+- [ ] Add "Initializing detection..." status between camera ready and "Running"
 
 **Dependencies**: Phase 0  
 **Outputs**: Running MediaPipe with webcam, console landmark output
@@ -135,9 +140,11 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [ ] Implement threshold-based proximity alert
 - [ ] Track proximity event frequency
 
-### 3.2 Pose Deviation Engine
-- [ ] Implement landmark comparison algorithm
-- [ ] Calculate per-joint deviation scores
+### 3.2 Shoulder Rounding Detection (Ratio-Based)
+- [ ] Calculate shoulder triangle ratio: `shoulder_width / shoulder_midpoint_to_nose_distance`
+- [ ] Compare live ratio against captured reference ratio
+- [ ] Track nose-to-shoulder-midpoint Y-delta to guard against head-tilt false positives
+- [ ] Use Z-coordinate averages as secondary reinforcement signal
 - [ ] Aggregate into overall posture score
 
 ### 3.3 Alert System MVP

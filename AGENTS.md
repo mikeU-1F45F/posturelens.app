@@ -61,13 +61,24 @@
 
 First load: ~30s for model download + WASM compilation. Subsequent loads: <2s from cache.
 
+## Shoulder Rounding Detection Strategy
+
+Detecting forward shoulder rounding from a front-facing 2D camera uses a **ratio-based metric** as a proxy for Z-axis (depth) movement:
+
+- **Triangle landmarks**: Nose (0), Left Shoulder (11), Right Shoulder (12)
+- **Primary metric**: `shoulder_width / shoulder_midpoint_to_nose_distance` — when shoulders round forward, apparent shoulder width narrows (foreshortening), decreasing the ratio vs. reference
+- **Secondary signal**: Z-coordinate logging from MediaPipe (depth relative to hip midpoint) — noisier than X/Y but useful as reinforcement when averaged over frames
+- **Head-tilt guard**: Track nose-to-shoulder-midpoint Y-delta separately to distinguish "head dropped" from "shoulders narrowed"
+- The ratio stays proportionally stable across camera distances, making it robust for users who move closer/further
+
 ## Data Flow
 
 1. Camera captures frames
 2. MediaPipe processes every 3rd frame
-3. NudgeEngine compares against reference pose
-4. Worker renders ghost overlay (optional)
-5. Visual/audio alerts trigger when thresholds exceeded
+3. Shoulder triangle drawn on canvas (nose → left shoulder → right shoulder)
+4. NudgeEngine compares triangle ratio against reference pose
+5. Worker renders ghost overlay (optional)
+6. Visual/audio alerts trigger when thresholds exceeded
 
 ## Mobile Detection (Hard Gate)
 
@@ -96,7 +107,8 @@ Service worker caches all static assets including models. Version is embedded fr
 
 **Video Preview** - Show webcam feed with visual detection indicators:
 - Live video feed displayed in UI
-- Bounding box overlays for detected body parts
+- **Shoulder triangle overlay**: Drawn between nose (landmark 0), left shoulder (11), and right shoulder (12) — replaces the torso bounding box
+- Bounding box overlays for hands and face
 - Detection status labels (right hand, left hand, pose skeleton, face)
 - Provides visual feedback that MediaPipe is working correctly
 
