@@ -138,6 +138,45 @@ button:hover:not(:disabled) {
   color: var(--accent-color);
 }
 
+.reference-status {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--warning-color);
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.privacy-notice {
+  margin-top: 2rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 1.4;
+}
+
+.clear-data-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clear-data-link:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .error-toast {
   position: fixed;
   bottom: 1rem;

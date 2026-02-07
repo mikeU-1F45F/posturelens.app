@@ -3,6 +3,14 @@
 
 import type { Results } from '@mediapipe/holistic'
 import { Detector } from './core/detector.ts'
+import {
+  calculateTriangleRatio,
+  clearAllData,
+  type Landmark,
+  loadReference,
+  type ReferencePose,
+  saveReference,
+} from './core/reference-store.ts'
 
 interface BrowserCapabilities {
   mobile: boolean
@@ -141,6 +149,21 @@ function showErrorToast(message: string): void {
   }
 }
 
+function showSuccessToast(message: string): void {
+  const toast = document.getElementById('error-toast')
+  if (toast) {
+    toast.textContent = message
+    toast.style.backgroundColor = '#00ff88'
+    toast.style.color = '#0a0a0a'
+    toast.style.display = 'block'
+    setTimeout(() => {
+      toast.style.display = 'none'
+      toast.style.backgroundColor = ''
+      toast.style.color = ''
+    }, 3000)
+  }
+}
+
 function drawBoundingBox(
   ctx: CanvasRenderingContext2D,
   landmarks: Array<{ x: number; y: number }>,
@@ -247,12 +270,46 @@ function updateDetectionStatus(label: string, detected: boolean, emoji: string):
 /** Tracks whether the first detection result has been received after starting */
 let firstDetectionReceived = false
 
+/** Capture state: when true, onDetectorResults collects triangle landmarks */
+let isCapturing = false
+/** Text overlay drawn on the detection canvas during capture (countdown, checkmark) */
+let captureOverlayText = ''
+const captureBuffer: Array<{ nose: Landmark; leftShoulder: Landmark; rightShoulder: Landmark }> = []
+
+/** Currently loaded reference pose (null if none) */
+let currentReference: ReferencePose | null = null
+
+/**
+ * Extracts triangle landmarks from pose results.
+ * Returns null if any of the 3 required landmarks are missing.
+ */
+function extractTriangleLandmarks(
+  poseLandmarks: Array<{ x: number; y: number; z?: number }>,
+): { nose: Landmark; leftShoulder: Landmark; rightShoulder: Landmark } | null {
+  const nose = poseLandmarks[0]
+  const leftShoulder = poseLandmarks[11]
+  const rightShoulder = poseLandmarks[12]
+
+  if (!nose || !leftShoulder || !rightShoulder) return null
+
+  return {
+    nose: { x: nose.x, y: nose.y, z: nose.z },
+    leftShoulder: { x: leftShoulder.x, y: leftShoulder.y, z: leftShoulder.z },
+    rightShoulder: { x: rightShoulder.x, y: rightShoulder.y, z: rightShoulder.z },
+  }
+}
+
 function onDetectorResults(results: Results): void {
   // Transition from "Initializing detection..." to "Running" on first result
   if (!firstDetectionReceived) {
     firstDetectionReceived = true
-    updateStatusDisplay('Running')
-    console.info('[ShadowNudge] First detection received, status: Running')
+    // Only show "Running" if not in capture mode
+    if (!isCapturing) {
+      updateStatusDisplay(
+        currentReference ? 'Running' : 'Ready — capture a reference pose to begin',
+      )
+    }
+    console.info('[ShadowNudge] First detection received')
   }
 
   const poseLandmarks = results.poseLandmarks?.length ?? 0
@@ -264,6 +321,14 @@ function onDetectorResults(results: Results): void {
   console.debug(
     `[Detector] Landmarks - Pose: ${poseLandmarks}, Left Hand: ${leftHandLandmarks}, Right Hand: ${rightHandLandmarks}, Face: ${faceLandmarks}`,
   )
+
+  // Collect triangle landmarks during capture
+  if (isCapturing && results.poseLandmarks) {
+    const triangle = extractTriangleLandmarks(results.poseLandmarks)
+    if (triangle) {
+      captureBuffer.push(triangle)
+    }
+  }
 
   // Update status labels with emojis
   updateDetectionStatus('pose', poseLandmarks > 0, '🧍')
@@ -295,10 +360,196 @@ function onDetectorResults(results: Results): void {
   if (results.faceLandmarks) {
     drawBoundingBox(ctx, results.faceLandmarks, '#00aaff') // Blue for face
   }
+
+  // Draw capture overlay text (countdown / checkmark) centered on canvas
+  if (captureOverlayText) {
+    const cx = canvas.width / 2
+    const cy = canvas.height / 2
+
+    // Dark backdrop pill for contrast
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+    const pillW = 140
+    const pillH = 130
+    const pillR = 20
+    ctx.beginPath()
+    ctx.roundRect(cx - pillW / 2, cy - pillH / 2, pillW, pillH, pillR)
+    ctx.fill()
+
+    // Text with stroke outline for extra pop
+    ctx.font = 'bold 96px system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'
+    ctx.lineWidth = 4
+    ctx.strokeText(captureOverlayText, cx, cy)
+    ctx.fillStyle = 'rgba(0, 255, 136, 0.95)'
+    ctx.fillText(captureOverlayText, cx, cy)
+  }
+}
+
+const MIN_CAPTURE_FRAMES = 10
+
+/**
+ * Runs a 3-second reference pose capture session.
+ * Collects triangle landmarks each processed frame, averages them,
+ * computes the ratio, and saves to IndexedDB.
+ */
+async function captureReferencePose(
+  captureBtn: HTMLButtonElement,
+  startBtn: HTMLButtonElement,
+  detector: Detector,
+): Promise<void> {
+  captureBtn.disabled = true
+  startBtn.disabled = true
+
+  // Ensure webcam and detection are running before capture
+  if (!detectionLoopRunning) {
+    try {
+      updateStatusDisplay('Starting webcam...')
+      const newVideo = await setupWebcam()
+      firstDetectionReceived = false
+      await startDetection(detector, newVideo)
+    } catch (error) {
+      console.error('[Capture] Failed to start webcam:', error)
+      showErrorToast('Failed to start webcam for capture')
+      captureBtn.disabled = false
+      return
+    }
+  }
+
+  // Reset capture state
+  captureBuffer.length = 0
+  isCapturing = true
+
+  // Countdown: 3... 2... 1...
+  for (let i = 3; i > 0; i--) {
+    captureOverlayText = String(i)
+    updateStatusDisplay(`Hold good posture... ${i}`)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
+
+  // Capture for remaining duration (countdown already took 3s, but we start
+  // collecting from the moment isCapturing was set)
+  captureOverlayText = ''
+  updateStatusDisplay('Capturing...')
+
+  // Wait a beat for the buffer to finalize
+  await new Promise((resolve) => setTimeout(resolve, 200))
+  isCapturing = false
+
+  // Validate we got enough frames
+  if (captureBuffer.length < MIN_CAPTURE_FRAMES) {
+    console.warn(
+      `[Capture] Only got ${captureBuffer.length} valid frames (need ${MIN_CAPTURE_FRAMES})`,
+    )
+    showErrorToast(
+      `Capture failed: only ${captureBuffer.length} valid frames detected. Ensure your face and shoulders are visible.`,
+    )
+    updateStatusDisplay('Capture failed — try again')
+    captureBtn.disabled = false
+    return
+  }
+
+  // Average the collected landmarks
+  const count = captureBuffer.length
+  const averaged = {
+    nose: { x: 0, y: 0, z: 0 },
+    leftShoulder: { x: 0, y: 0, z: 0 },
+    rightShoulder: { x: 0, y: 0, z: 0 },
+  }
+
+  for (const frame of captureBuffer) {
+    averaged.nose.x += frame.nose.x
+    averaged.nose.y += frame.nose.y
+    averaged.nose.z += frame.nose.z ?? 0
+    averaged.leftShoulder.x += frame.leftShoulder.x
+    averaged.leftShoulder.y += frame.leftShoulder.y
+    averaged.leftShoulder.z += frame.leftShoulder.z ?? 0
+    averaged.rightShoulder.x += frame.rightShoulder.x
+    averaged.rightShoulder.y += frame.rightShoulder.y
+    averaged.rightShoulder.z += frame.rightShoulder.z ?? 0
+  }
+
+  const nose: Landmark = {
+    x: averaged.nose.x / count,
+    y: averaged.nose.y / count,
+    z: averaged.nose.z / count,
+  }
+  const leftShoulder: Landmark = {
+    x: averaged.leftShoulder.x / count,
+    y: averaged.leftShoulder.y / count,
+    z: averaged.leftShoulder.z / count,
+  }
+  const rightShoulder: Landmark = {
+    x: averaged.rightShoulder.x / count,
+    y: averaged.rightShoulder.y / count,
+    z: averaged.rightShoulder.z / count,
+  }
+
+  const ratio = calculateTriangleRatio(nose, leftShoulder, rightShoulder)
+
+  const reference: ReferencePose = {
+    nose,
+    leftShoulder,
+    rightShoulder,
+    ratio,
+    capturedAt: new Date().toISOString(),
+  }
+
+  try {
+    await saveReference(reference)
+    currentReference = reference
+    console.info(`[Capture] Reference saved — ratio: ${ratio.toFixed(4)}, frames: ${count}`)
+
+    // Flash checkmark on canvas
+    captureOverlayText = '✅'
+    setTimeout(() => {
+      captureOverlayText = ''
+    }, 1500)
+
+    updateStatusDisplay('Reference captured — ready to monitor')
+    updateReferenceStatus(reference)
+    captureBtn.disabled = false
+    captureBtn.textContent = 'Recapture Pose'
+    syncStartButton(startBtn)
+  } catch (error) {
+    console.error('[Capture] Failed to save reference:', error)
+    showErrorToast('Failed to save reference pose')
+    updateStatusDisplay('Save failed — try again')
+    captureBtn.disabled = false
+  }
+}
+
+/** Updates the reference status display in the UI */
+function updateReferenceStatus(ref: ReferencePose | null): void {
+  const refStatus = document.getElementById('reference-status')
+  if (!refStatus) return
+
+  if (ref) {
+    const date = new Date(ref.capturedAt)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const dateTimeStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+    refStatus.textContent = `Reference pose loaded (captured: ${dateTimeStr})`
+    refStatus.style.color = '#00ff88'
+  } else {
+    refStatus.textContent = 'No reference pose \u2014 capture one to begin monitoring'
+    refStatus.style.color = '#ffaa00'
+  }
 }
 
 let detectionLoopRunning = false
 let animationFrameId: number | null = null
+
+/** Syncs the Start/Stop button label and disabled state with detection + reference state */
+function syncStartButton(startBtn: HTMLButtonElement): void {
+  if (detectionLoopRunning) {
+    startBtn.textContent = 'Stop Monitoring'
+    startBtn.disabled = !currentReference
+  } else {
+    startBtn.textContent = 'Start Monitoring'
+    startBtn.disabled = !currentReference
+  }
+}
 
 async function startDetection(detector: Detector, video: HTMLVideoElement): Promise<void> {
   if (detectionLoopRunning) return
@@ -408,22 +659,51 @@ async function initializeApp(): Promise<void> {
     await startDetection(detector, video)
 
     hideProgress()
-    // Status will transition to "Running" when first detection result arrives
-    // (see onDetectorResults)
+
+    // Check for existing reference pose
+    const existingRef = await loadReference()
+    currentReference = existingRef
+    updateReferenceStatus(existingRef)
+
+    const captureBtn = document.getElementById('capture-btn') as HTMLButtonElement
+    const startBtn = document.getElementById('start-btn') as HTMLButtonElement
+
+    if (existingRef) {
+      console.info(
+        `[ShadowNudge] Existing reference loaded (ratio: ${existingRef.ratio.toFixed(4)})`,
+      )
+      updateStatusDisplay('Reference pose loaded — ready to monitor')
+      if (captureBtn) {
+        captureBtn.disabled = false
+        captureBtn.textContent = 'Recapture Pose'
+      }
+      if (startBtn) syncStartButton(startBtn)
+    } else {
+      console.info('[ShadowNudge] No reference found — capture required')
+      updateStatusDisplay('Capture a reference pose to begin')
+      if (captureBtn) {
+        captureBtn.disabled = false
+      }
+      if (startBtn) syncStartButton(startBtn)
+    }
+
     console.info('[ShadowNudge] App initialized successfully')
 
-    // Wire up start/stop button
-    const startBtn = document.getElementById('start-btn') as HTMLButtonElement
-    if (startBtn) {
-      startBtn.disabled = false
-      startBtn.textContent = 'Stop Monitoring'
+    // Wire up capture button
+    if (captureBtn && startBtn) {
+      captureBtn.addEventListener('click', () => {
+        captureReferencePose(captureBtn, startBtn, detector)
+      })
+    }
 
+    // Wire up start/stop button
+    if (startBtn) {
       startBtn.addEventListener('click', async () => {
         if (detectionLoopRunning) {
           // Stop monitoring
           stopDetection(video)
-          updateStatusDisplay('Stopped - Camera off')
-          startBtn.textContent = 'Start Monitoring'
+          updateStatusDisplay('Stopped — camera off')
+          syncStartButton(startBtn)
         } else {
           // Start monitoring
           try {
@@ -431,12 +711,41 @@ async function initializeApp(): Promise<void> {
             const newVideo = await setupWebcam()
             updateStatusDisplay('Initializing detection...')
             await startDetection(detector, newVideo)
-            startBtn.textContent = 'Stop Monitoring'
+            syncStartButton(startBtn)
           } catch (error) {
             console.error('[ShadowNudge] Failed to restart monitoring:', error)
             showErrorToast('Failed to restart webcam')
-            updateStatusDisplay('Stopped - Camera off')
+            updateStatusDisplay('Stopped — camera off')
           }
+        }
+      })
+    }
+
+    // Wire up clear data link
+    const clearLink = document.getElementById('clear-data-link')
+    if (clearLink) {
+      clearLink.addEventListener('click', async (e) => {
+        e.preventDefault()
+        try {
+          if (detectionLoopRunning) {
+            stopDetection(video)
+          }
+          await clearAllData()
+          currentReference = null
+          updateReferenceStatus(null)
+          updateStatusDisplay('All local data cleared')
+          if (captureBtn) {
+            captureBtn.disabled = false
+            captureBtn.textContent = 'Capture Reference Pose'
+          }
+          if (startBtn) {
+            startBtn.disabled = true
+            startBtn.textContent = 'Start Monitoring'
+          }
+          showSuccessToast('All local data cleared')
+        } catch (error) {
+          console.error('[ShadowNudge] Failed to clear data:', error)
+          showErrorToast('Failed to clear local data')
         }
       })
     }
