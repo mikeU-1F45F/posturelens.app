@@ -38,7 +38,7 @@ export function displayMobileBlock(): void {
     padding: 2rem; text-align: center;
   `
   block.innerHTML = `
-    <h1 style="margin-bottom: 1rem;">ShadowNudge</h1>
+    <h1 style="margin-bottom: 1rem;">PostureLens</h1>
     <p style="max-width: 400px; line-height: 1.5;">
       This app requires a desktop or laptop computer with a webcam.
       Mobile devices are not supported for privacy and performance reasons.

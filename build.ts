@@ -2,7 +2,7 @@
 
 import { build } from 'bun'
 
-console.info('Building ShadowNudge...')
+console.info('Building PostureLens...')
 
 const result = await build({
   entrypoints: ['./src/main.ts'],

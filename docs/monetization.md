@@ -1,4 +1,4 @@
-# ShadowNudge Monetization Strategy
+# PostureLens Monetization Strategy
 
 **Status**: Draft — exploring options  
 **Constraint**: Zero telemetry, zero data leakage, local-first privacy model  
@@ -8,15 +8,15 @@
 
 ## Guiding Principle
 
-ShadowNudge's privacy promise is non-negotiable. Every monetization path must satisfy one rule: **no user data — behavioral, biometric, or otherwise — ever leaves the browser**. The app never phones home, never tracks impressions, never fingerprints users.
+PostureLens's privacy promise is non-negotiable. Every monetization path must satisfy one rule: **no user data — behavioral, biometric, or otherwise — ever leaves the browser**. The app never phones home, never tracks impressions, never fingerprints users.
 
-This is not just an ethical stance — it's a competitive moat. Users trust ShadowNudge *because* the source code proves there's nothing to hide.
+This is not just an ethical stance — it's a competitive moat. Users trust PostureLens *because* the source code proves there's nothing to hide.
 
 ---
 
 ## Why Contextual Relevance Works Without Tracking
 
-Traditional ad tech matches ads to users by surveilling behavior. ShadowNudge doesn't need to. The app's entire purpose pre-qualifies the audience:
+Traditional ad tech matches ads to users by surveilling behavior. PostureLens doesn't need to. The app's entire purpose pre-qualifies the audience:
 
 - Someone using a posture-correction tool is already interested in posture health
 - Someone getting face-touch alerts is already thinking about skin and hygiene habits
@@ -86,12 +86,12 @@ Card content is bundled as a static JSON file or embedded HTML. The nudge engine
 ### How It Works
 A "Find a Provider" section lets users browse a curated directory of practitioners — chiropractors, physical therapists, dermatologists, ergonomic consultants. Practitioners pay to be listed.
 
-The user actively clicks into the directory and initiates contact. A simple contact form submits directly to the provider's email (mailto link or a lightweight form endpoint owned by the provider, not by ShadowNudge).
+The user actively clicks into the directory and initiates contact. A simple contact form submits directly to the provider's email (mailto link or a lightweight form endpoint owned by the provider, not by PostureLens).
 
 ### Why This Preserves Privacy
-- ShadowNudge never stores, proxies, or processes the user's contact information
+- PostureLens never stores, proxies, or processes the user's contact information
 - The directory is a static list bundled with the app — no search queries sent to a server
-- Contact form submissions go directly from user → provider (ShadowNudge is not in the data path)
+- Contact form submissions go directly from user → provider (PostureLens is not in the data path)
 - No analytics on which providers users view or contact
 
 ### Revenue Model

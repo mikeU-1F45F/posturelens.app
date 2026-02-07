@@ -1,4 +1,4 @@
-// ShadowNudge - App Bootstrap & Orchestrator
+// PostureLens - App Bootstrap & Orchestrator
 // Wires together modules: capabilities, UI, canvas, capture, detection
 
 import type { Results } from '@mediapipe/holistic'
@@ -62,10 +62,10 @@ async function setupWebcam(): Promise<HTMLVideoElement> {
     })
     videoPreview.srcObject = stream
 
-    console.info('[ShadowNudge] Webcam stream acquired')
+    console.info('[PostureLens] Webcam stream acquired')
     return videoPreview
   } catch (error) {
-    console.error('[ShadowNudge] Webcam access failed:', error)
+    console.error('[PostureLens] Webcam access failed:', error)
     throw new Error('Failed to access webcam. Please grant camera permissions.')
   }
 }
@@ -82,7 +82,7 @@ function onDetectorResults(results: Results): void {
         currentReference ? 'Running' : 'Ready \u2014 capture a reference pose to begin',
       )
     }
-    console.info('[ShadowNudge] First detection received')
+    console.info('[PostureLens] First detection received')
   }
 
   const poseLandmarks = results.poseLandmarks?.length ?? 0
@@ -134,7 +134,7 @@ async function startDetection(detector: Detector, video: HTMLVideoElement): Prom
     animationFrameId = requestAnimationFrame(processNextFrame)
   }
   animationFrameId = requestAnimationFrame(processNextFrame)
-  console.info('[ShadowNudge] Detection loop started')
+  console.info('[PostureLens] Detection loop started')
 }
 
 function stopDetection(video: HTMLVideoElement): void {
@@ -158,7 +158,7 @@ function stopDetection(video: HTMLVideoElement): void {
   }
 
   resetDetectionStatus()
-  console.info('[ShadowNudge] Detection stopped, webcam released')
+  console.info('[PostureLens] Detection stopped, webcam released')
 }
 
 // ---------------------------------------------------------------------------
@@ -167,10 +167,10 @@ function stopDetection(video: HTMLVideoElement): void {
 
 async function initializeApp(): Promise<void> {
   const capabilities = detectBrowserCapabilities()
-  console.debug('[ShadowNudge] Browser capabilities:', capabilities)
+  console.debug('[PostureLens] Browser capabilities:', capabilities)
 
   if (capabilities.mobile) {
-    console.error('[ShadowNudge] Mobile device detected - blocking')
+    console.error('[PostureLens] Mobile device detected - blocking')
     displayMobileBlock()
     return
   }
@@ -180,19 +180,19 @@ async function initializeApp(): Promise<void> {
   if (!capabilities.wasm) {
     missingCapabilities.push('WASM')
   } else if (!capabilities.webgpu) {
-    console.warn('[ShadowNudge] WebGPU unavailable, falling back to WASM')
+    console.warn('[PostureLens] WebGPU unavailable, falling back to WASM')
   }
   if (!capabilities.offscreenCanvas) {
-    console.warn('[ShadowNudge] OffscreenCanvas unavailable - ghost rendering disabled')
+    console.warn('[PostureLens] OffscreenCanvas unavailable - ghost rendering disabled')
   }
 
   if (missingCapabilities.length > 0) {
-    console.warn(`[ShadowNudge] Missing capabilities: ${missingCapabilities.join(', ')}`)
+    console.warn(`[PostureLens] Missing capabilities: ${missingCapabilities.join(', ')}`)
     if (missingCapabilities.includes('WASM')) {
       displayCapabilityWarning(missingCapabilities)
     }
   } else {
-    console.debug('[ShadowNudge] All capabilities supported')
+    console.debug('[PostureLens] All capabilities supported')
   }
 
   // Cache canvas reference (container is always in DOM)
@@ -234,7 +234,7 @@ async function initializeApp(): Promise<void> {
 
     if (existingRef) {
       console.info(
-        `[ShadowNudge] Existing reference loaded (ratio: ${existingRef.ratio.toFixed(4)})`,
+        `[PostureLens] Existing reference loaded (ratio: ${existingRef.ratio.toFixed(4)})`,
       )
       updateStatusDisplay('Reference pose loaded \u2014 ready to monitor')
       if (captureBtn) {
@@ -243,13 +243,13 @@ async function initializeApp(): Promise<void> {
       }
       if (startBtn) syncStartButton(startBtn, detectionLoopRunning, !!currentReference)
     } else {
-      console.info('[ShadowNudge] No reference found \u2014 capture required')
+      console.info('[PostureLens] No reference found \u2014 capture required')
       updateStatusDisplay('Capture a reference pose to begin')
       if (captureBtn) captureBtn.disabled = false
       if (startBtn) syncStartButton(startBtn, detectionLoopRunning, !!currentReference)
     }
 
-    console.info('[ShadowNudge] App initialized successfully')
+    console.info('[PostureLens] App initialized successfully')
 
     // Wire capture button
     if (captureBtn && startBtn) {
@@ -284,7 +284,7 @@ async function initializeApp(): Promise<void> {
             await startDetection(detector, newVideo)
             syncStartButton(startBtn, detectionLoopRunning, !!currentReference)
           } catch (error) {
-            console.error('[ShadowNudge] Failed to restart monitoring:', error)
+            console.error('[PostureLens] Failed to restart monitoring:', error)
             showErrorToast('Failed to restart webcam')
             updateStatusDisplay('Stopped \u2014 camera off')
           }
@@ -313,7 +313,7 @@ async function initializeApp(): Promise<void> {
           }
           showSuccessToast('All local data cleared')
         } catch (error) {
-          console.error('[ShadowNudge] Failed to clear data:', error)
+          console.error('[PostureLens] Failed to clear data:', error)
           showErrorToast('Failed to clear local data')
         }
       })
@@ -325,11 +325,11 @@ async function initializeApp(): Promise<void> {
       detector.cleanup()
     })
   } catch (error) {
-    console.error('[ShadowNudge] Initialization failed:', error)
+    console.error('[PostureLens] Initialization failed:', error)
     updateStatusDisplay('Initialization failed')
     showErrorToast(error instanceof Error ? error.message : 'Unknown error occurred')
   }
 }
 
-console.info('[ShadowNudge] Loading...')
+console.info('[PostureLens] Loading...')
 document.addEventListener('DOMContentLoaded', initializeApp)

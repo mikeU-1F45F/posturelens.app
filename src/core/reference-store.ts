@@ -1,7 +1,7 @@
 // Reference Store - IndexedDB wrapper for shoulder triangle reference pose
 // Stores triangle landmarks (nose, L shoulder, R shoulder) + computed ratio
 
-const DB_NAME = 'shadow-nudge'
+const DB_NAME = 'posturelens'
 const DB_VERSION = 1
 const STORE_NAME = 'reference'
 const REFERENCE_KEY = 'current'

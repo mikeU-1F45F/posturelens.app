@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "shadow-nudge",
+  "name": "posturelens",
   "pages_build_output_dir": "./public",
   "compatibility_date": "2025-01-25"
 }

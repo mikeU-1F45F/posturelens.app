@@ -1,4 +1,4 @@
-# ShadowNudge Architecture Guide
+# PostureLens Architecture Guide
 
 **Version**: 0.1.0-MVP  
 **Target**: Desktop/laptop browsers only (Chrome 90+)  

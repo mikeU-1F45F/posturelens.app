@@ -1,4 +1,4 @@
-# ShadowNudge Development Tasks & Milestones
+# PostureLens Development Tasks & Milestones
 
 **Version**: 0.1.0-MVP  
 **Last Updated**: 2026-02-07

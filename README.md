@@ -1,10 +1,10 @@
-# ShadowNudge - AI Posture Companion
+# PostureLens - AI Posture Companion
 
 **Version**: 0.1.0-MVP  
 **Privacy**: Zero telemetry, pure local-first  
 **Target**: Desktop/laptop browsers only (Chrome 90+)  
 
-ShadowNudge uses MediaPipe pose detection to monitor your posture and provide gentle nudges when you slouch or drift from your reference pose.
+PostureLens uses MediaPipe pose detection to monitor your posture and provide gentle nudges when you slouch or drift from your reference pose.
 
 ## Quickstart
 

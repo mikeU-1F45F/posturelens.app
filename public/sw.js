@@ -1,8 +1,8 @@
-// ShadowNudge Service Worker
+// PostureLens Service Worker
 // Precaches static assets, handles version updates
 
 const PACKAGE_VERSION = '__PACKAGE_VERSION__'
-const CACHE_NAME = `shadow-nudge-v${PACKAGE_VERSION}`
+const CACHE_NAME = `posturelens-v${PACKAGE_VERSION}`
 
 const PRECACHE_URLS = ['/', '/index.html', '/main.js', '/models/holistic-lite.bin']
 
