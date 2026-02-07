@@ -114,7 +114,7 @@ Service worker caches all static assets including models. Version is embedded fr
 - Detection status labels (right hand, left hand, pose skeleton, face)
 - Provides visual feedback that MediaPipe is working correctly
 
-**Capture Mode First** - App launches in reference pose capture mode on every load. Persistent toggle available to re-capture (e.g., after moving closer, lighting changes, clothing changes).
+**Capture Mode** - On first load (no stored reference), requires 3-second pose capture before monitoring. On subsequent loads, loads saved reference from IndexedDB and enables monitoring immediately. "Recapture Pose" button available for lighting/position changes. "Clear all local data" link resets everything.
 
 **Alert Behavior (MVP - Hard-Coded)**
 - **Normal Deviation**: Short audio beep + background color flash, max 1 per minute
@@ -149,11 +149,13 @@ Recommend Chrome 113+ for full WebGPU acceleration.
 
 ## Privacy-First Checklist
 
+- ✅ No photos taken, retained, or transmitted
 - ✅ No network requests after initial load
 - ✅ No telemetry or analytics
 - ✅ IndexedDB stays local
 - ✅ Camera frames processed in memory only
 - ✅ Console-only debugging traces
+- ✅ "Clear all local data" link available to user (deletes IndexedDB, resets state)
 
 ## References
 

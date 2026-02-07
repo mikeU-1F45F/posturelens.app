@@ -106,27 +106,30 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 ## Phase 2: Reference System & Capture UX
 
 ### 2.1 IndexedDB Reference Store
-- [ ] Create `src/core/reference-store.ts`
-- [ ] Store triangle landmarks (nose, L shoulder, R shoulder) + computed ratio only
-- [ ] Implement save/load reference pose (single pose)
-- [ ] Add IndexedDB schema versioning
-- [ ] Handle initial state (no reference captured)
+- [x] Create `src/core/reference-store.ts`
+- [x] Store triangle landmarks (nose, L shoulder, R shoulder) + computed ratio only
+- [x] Implement save/load reference pose (single pose)
+- [x] Add IndexedDB schema versioning
+- [x] Handle initial state (no reference captured)
+- [x] Add `clearAllData()` function for reusable data reset
 
 ### 2.2 Capture Mode UI Flow
-- [ ] On load: check IndexedDB for existing reference
+- [x] On load: check IndexedDB for existing reference
   - If no reference: require 3-second capture before monitoring can start
-  - If reference exists: show "Reference pose loaded" status, enable monitoring immediately
-- [ ] Wire up "Capture Reference" button with 3-second countdown
-  - Instruction: "Sit in your normal working position with good posture and hold still"
+  - If reference exists: show "Reference pose loaded" status with ISO date, enable monitoring immediately
+- [x] Wire up "Capture Reference" button with 3-second countdown
+  - Instruction: "Hold good posture... 3... 2... 1..."
   - Average triangle landmarks across ~3 seconds of frames for stable reference
-  - Require all 3 triangle landmarks detected for duration
-- [ ] Handle capture errors (landmarks lost mid-capture, partial detection)
-- [ ] Existing capture button serves as re-capture trigger (for lighting/position changes)
+  - Require minimum 10 valid frames with all 3 triangle landmarks
+- [x] Handle capture errors (insufficient frames, partial detection)
+- [x] Existing capture button serves as re-capture trigger (for lighting/position changes)
 
 ### 2.3 Basic UI Shell & Privacy Notice
-- [ ] Add privacy disclaimer visible on page: no photos retained or transmitted, all calculations numeric-only, stored locally in this browser
-- [ ] Wire up existing capture/start buttons to new capture flow
-- [ ] Show reference status (loaded from storage vs. needs capture)
+- [x] Add privacy disclaimer: "No photos taken, retained, or transmitted. All calculations numeric-only, stored locally."
+- [x] Wire up existing capture/start buttons to new capture flow
+- [x] Show reference status (loaded from storage vs. needs capture) with ISO date
+- [x] Add "Clear all local data" link (stops webcam, deletes IndexedDB, resets UI, shows success toast)
+- [x] Add ARIA live region for reference status
 - [ ] Add basic CSS (accessibility: high contrast, keyboard nav)
 - [ ] Add ARIA labels for screen readers
 
