@@ -148,24 +148,26 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 ## Phase 3: Proximity & Deviation Detection
 
 ### 3.1 Hand-Face Proximity Detection
-- [ ] Create proximity calculator in `src/core/proximity.ts`
-- [ ] Calculate hand-landmark to face-landmark distances
-- [ ] When threshold exceeded, trigger `AlertEngine` (normal/low-confidence) with reason "Hands near face"
-- [ ] Track proximity event frequency
+- [x] Create proximity calculator in `src/core/proximity.ts`
+- [x] Calculate hand-landmark to face-landmark distances
+- [x] When threshold exceeded, trigger `AlertEngine` (normal/low-confidence) with reason "Hands near face"
+- [x] Track proximity event frequency
+- [x] Add Z-depth gating (hand vs face landmark Z) to reduce false positives when hand is close to camera
 
 ### 3.2 Shoulder Rounding Detection (Ratio-Based)
-- [ ] Calculate shoulder triangle ratio: `shoulder_width / shoulder_midpoint_to_nose_distance`
-- [ ] Compare live ratio against captured reference ratio
-- [ ] Track nose-to-shoulder-midpoint Y-delta to guard against head-tilt false positives
+- [x] Calculate shoulder triangle ratio: `shoulder_width / shoulder_midpoint_to_nose_distance`
+- [x] Compare live ratio against captured reference ratio
+- [x] Track nose-to-shoulder-midpoint Y-delta to guard against head-tilt false positives
 - [ ] Use Z-coordinate averages as secondary reinforcement signal
 - [ ] Aggregate into overall posture score
 
 ### 3.3 Alert System MVP
-- [ ] Do not overlay alert status on the video canvas (avoid competing with geometry overlays)
-- [ ] Normal confidence: red background flash + short audio beep + red toast with reason
-- [ ] Low confidence: yellow background flash only (no audio, no toast)
-- [ ] Prioritize hand-face proximity alerts
-- [ ] Implement global cooldown (prod: 60s, localhost dev: 5s)
+- [x] Do not overlay alert status on the video canvas (avoid competing with geometry overlays)
+- [x] Normal confidence: red background flash + short audio beep + red toast with reason
+- [x] Low confidence: yellow background flash only (no audio, no toast)
+- [x] Prioritize hand-face proximity alerts
+- [x] Implement global cooldown (prod: 60s, localhost dev: 5s)
+- [x] Add sensitivity controls (Low/Medium/High) for face-touch and posture; persist to localStorage
 
 **Dependencies**: Phase 2  
 **Outputs**: Proximity detection working, basic deviation scoring, audio/visual alerts

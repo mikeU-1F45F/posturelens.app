@@ -11,6 +11,9 @@ Before making changes, read:
 - [`README.md`](README.md)
 - [`docs/TASKS.md`](docs/TASKS.md)
 
+## Session Notes
+- [`docs/session-2026-02-08.md`](docs/session-2026-02-08.md)
+
 ## Project Structure
 
 - **`public/`** - Static assets (models, service worker, HTML)
