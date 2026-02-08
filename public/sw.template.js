@@ -112,6 +112,20 @@ self.addEventListener('message', (event) => {
     return
   }
 
+  if (data.type === 'GET_VERSION') {
+    const payload = { type: 'SW_VERSION', version: PACKAGE_VERSION }
+
+    // Prefer replying on a MessageChannel port if provided.
+    const port = event.ports?.[0]
+    if (port) {
+      port.postMessage(payload)
+    } else {
+      event.waitUntil(postMessageToClient(event, payload))
+    }
+
+    return
+  }
+
   if (data.type === 'CHECK_FULL_POSE_MODEL_CACHE') {
     event.waitUntil(
       (async () => {
