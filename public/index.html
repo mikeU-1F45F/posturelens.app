@@ -61,6 +61,23 @@
     </div>
 
     <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+    <div
+      id="update-toast"
+      class="update-toast"
+      role="alertdialog"
+      aria-live="polite"
+      aria-label="Update available"
+      style="display: none;"
+    >
+      <div id="update-toast-text" class="update-toast__text">
+        New version available. Reload?
+      </div>
+      <div class="update-toast__actions">
+        <button id="update-toast-yes" type="button" class="update-toast__btn">Yes</button>
+        <button id="update-toast-no" type="button" class="update-toast__btn update-toast__btn--secondary">No</button>
+      </div>
+    </div>
   </div>
   
   <canvas id="ghost-canvas" aria-hidden="true"></canvas>
@@ -68,7 +85,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/sw.js')
+        .register('/sw.js', { updateViaCache: 'none' })
         .then((reg) => {
           console.info('[PostureLens] Service worker registered:', reg.scope)
         })

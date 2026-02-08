@@ -28,6 +28,7 @@ import {
   showErrorToast,
   showProgress,
   showSuccessToast,
+  showUpdatePrompt,
   syncStartButton,
   updateDetectionStatus,
   updateReferenceStatus,
@@ -206,6 +207,107 @@ function stopDetection(video: HTMLVideoElement): void {
 
   resetDetectionStatus()
   console.info('[PostureLens] Detection stopped, webcam released')
+}
+
+// ---------------------------------------------------------------------------
+// Service worker updates
+// ---------------------------------------------------------------------------
+
+let updatePromptDismissedThisSession = false
+let updatePromptShownThisSession = false
+
+async function requestServiceWorkerVersion(worker: ServiceWorker): Promise<string> {
+  return new Promise((resolve) => {
+    const channel = new MessageChannel()
+
+    const timeoutId = window.setTimeout(() => {
+      resolve('unknown')
+    }, 1000)
+
+    channel.port1.onmessage = (event) => {
+      clearTimeout(timeoutId)
+
+      const data = event.data as unknown
+      if (data && typeof data === 'object') {
+        const msg = data as { type?: string; version?: string }
+        if (msg.type === 'SW_VERSION' && typeof msg.version === 'string') {
+          resolve(msg.version)
+          return
+        }
+      }
+
+      resolve('unknown')
+    }
+
+    worker.postMessage({ type: 'GET_VERSION' }, [channel.port2])
+  })
+}
+
+function setupServiceWorkerUpdatePrompt(): void {
+  if (!('serviceWorker' in navigator)) return
+
+  const maybeShowPrompt = async (reg: ServiceWorkerRegistration) => {
+    if (updatePromptDismissedThisSession || updatePromptShownThisSession) return
+
+    // Only prompt when there's a previously controlling SW and a new one is fully downloaded.
+    if (!navigator.serviceWorker.controller) return
+
+    const waiting = reg.waiting
+    if (!waiting) return
+
+    updatePromptShownThisSession = true
+    const version = await requestServiceWorkerVersion(waiting)
+
+    showUpdatePrompt(
+      version,
+      () => {
+        // User accepted update: activate waiting worker and reload once it takes control.
+        navigator.serviceWorker.addEventListener(
+          'controllerchange',
+          () => {
+            window.location.reload()
+          },
+          { once: true },
+        )
+        waiting.postMessage({ type: 'SKIP_WAITING' })
+      },
+      () => {
+        // User declined update: suppress for this session.
+        updatePromptDismissedThisSession = true
+      },
+    )
+  }
+
+  void (async () => {
+    let reg: ServiceWorkerRegistration | undefined
+    for (let attempt = 0; attempt < 10; attempt++) {
+      reg = await navigator.serviceWorker.getRegistration()
+      if (reg) break
+      await new Promise((r) => setTimeout(r, 250))
+    }
+    if (!reg) return
+
+    // If an update is already waiting when the page loads, prompt immediately.
+    await maybeShowPrompt(reg)
+
+    reg.addEventListener('updatefound', () => {
+      const installing = reg.installing
+      if (!installing) return
+
+      installing.addEventListener('statechange', () => {
+        if (installing.state === 'installed' && reg.waiting) {
+          void maybeShowPrompt(reg)
+        }
+      })
+    })
+
+    // Proactively check for updates on page load.
+    try {
+      await reg.update()
+    } catch (error) {
+      console.debug('[PostureLens] Service worker update check failed:', error)
+    }
+  })()
 }
 
 // ---------------------------------------------------------------------------
@@ -392,6 +494,8 @@ async function initializeApp(): Promise<void> {
   }
 
   try {
+    setupServiceWorkerUpdatePrompt()
+
     updateStatusDisplay('Initializing detector...')
     showProgress('First-time download: ~26MB (cached for future visits)', 10)
 

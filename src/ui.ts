@@ -58,6 +58,40 @@ export function showSuccessToast(message: string): void {
   showToast(message, 'success', 3000)
 }
 
+export function showUpdatePrompt(version: string, onYes: () => void, onNo: () => void): void {
+  const toast = document.getElementById('update-toast')
+  const text = document.getElementById('update-toast-text')
+  const yesBtn = document.getElementById('update-toast-yes') as HTMLButtonElement | null
+  const noBtn = document.getElementById('update-toast-no') as HTMLButtonElement | null
+
+  if (!toast || !text || !yesBtn || !noBtn) return
+
+  if (!version || version === 'unknown') {
+    text.textContent = 'New version available. Reload?'
+  } else {
+    const v = version.startsWith('v') ? version : `v${version}`
+    text.textContent = `New version available (${v}). Reload?`
+  }
+  toast.style.display = 'block'
+
+  const cleanup = () => {
+    toast.style.display = 'none'
+  }
+
+  const onYesClick = () => {
+    cleanup()
+    onYes()
+  }
+
+  const onNoClick = () => {
+    cleanup()
+    onNo()
+  }
+
+  yesBtn.addEventListener('click', onYesClick, { once: true })
+  noBtn.addEventListener('click', onNoClick, { once: true })
+}
+
 /** Updates a detection status label (pose, left-hand, right-hand, face) */
 export function updateDetectionStatus(label: string, detected: boolean, emoji: string): void {
   const statusElement = document.getElementById(`${label}-status`)
