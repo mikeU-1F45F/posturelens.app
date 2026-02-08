@@ -19,6 +19,38 @@ body {
   min-height: 100vh;
 }
 
+@keyframes alertFlashRed {
+  0% {
+    background-color: var(--bg-color);
+  }
+  25% {
+    background-color: rgba(255, 68, 68, 0.22);
+  }
+  100% {
+    background-color: var(--bg-color);
+  }
+}
+
+@keyframes alertFlashYellow {
+  0% {
+    background-color: var(--bg-color);
+  }
+  25% {
+    background-color: rgba(255, 170, 0, 0.22);
+  }
+  100% {
+    background-color: var(--bg-color);
+  }
+}
+
+body.alert-flash--red {
+  animation: alertFlashRed 0.65s ease-out;
+}
+
+body.alert-flash--yellow {
+  animation: alertFlashYellow 0.65s ease-out;
+}
+
 #app {
   max-width: 960px;
   margin: 0 auto;

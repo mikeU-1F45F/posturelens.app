@@ -58,6 +58,11 @@ export function showSuccessToast(message: string): void {
   showToast(message, 'success', 3000)
 }
 
+/** Shows a red alert toast (hands near face, posture) for 4 seconds */
+export function showAlertToast(message: string): void {
+  showToast(message, 'error', 4000)
+}
+
 export function showUpdatePrompt(version: string, onYes: () => void, onNo: () => void): void {
   const toast = document.getElementById('update-toast')
   const text = document.getElementById('update-toast-text')
