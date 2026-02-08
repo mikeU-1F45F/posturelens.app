@@ -49,6 +49,16 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
+  const url = new URL(event.request.url)
+  const isDevHost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+
+  // In dev, always load the latest bundle from the server so refresh picks up changes.
+  // (Otherwise the SW can serve a stale cached /main.js and make debugging confusing.)
+  if (isDevHost && (url.pathname === '/main.js' || url.pathname === '/main.js.map')) {
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)))
+    return
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (event.request.url.endsWith('/package.json')) {
@@ -62,7 +72,6 @@ self.addEventListener('fetch', (event) => {
       return fetch(event.request)
         .then((response) => {
           // Cache-bust by versioned cache name; avoid caching cross-origin.
-          const url = new URL(event.request.url)
           if (url.origin === self.location.origin && url.pathname.startsWith('/models/')) {
             event.waitUntil(
               caches.open(CACHE_NAME).then((cache) => {
