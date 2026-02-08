@@ -41,6 +41,17 @@
           <button id="capture-btn" disabled aria-label="Capture reference pose">Capture Reference Pose</button>
           <button id="start-btn" disabled aria-label="Start monitoring">Start Monitoring</button>
         </div>
+
+        <div class="model-toggle" role="group" aria-label="Model selection">
+          <label class="model-toggle__label" for="full-model-toggle">
+            <input id="full-model-toggle" type="checkbox" disabled />
+            Use full pose model
+          </label>
+          <div id="full-model-status" class="model-toggle__status" aria-live="polite">
+            Full model: checking…
+          </div>
+        </div>
+
         <p class="privacy-notice" role="note">
           🔒 No photos taken, retained, or transmitted.
           All data stays local to this browser.
@@ -54,6 +65,18 @@
   
   <canvas id="ghost-canvas" aria-hidden="true"></canvas>
   
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((reg) => {
+          console.info('[PostureLens] Service worker registered:', reg.scope)
+        })
+        .catch((error) => {
+          console.warn('[PostureLens] Service worker registration failed:', error)
+        })
+    }
+  </script>
   <script src="/main.js"></script>
 </body>
 </html>

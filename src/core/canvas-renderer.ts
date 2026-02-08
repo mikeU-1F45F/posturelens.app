@@ -111,17 +111,31 @@ export function drawCaptureOverlay(ctx: CanvasRenderingContext2D): void {
   const cx = ctx.canvas.width / 2
   const cy = ctx.canvas.height / 2
 
+  // Use a smaller font/pill for longer strings like "Switching model...".
+  const glyphCount = Array.from(overlayText).length
+  const isShort = glyphCount <= 2
+
+  const fontSize = isShort ? 96 : 28
+  ctx.font = `bold ${fontSize}px system-ui, sans-serif`
+
+  const metrics = ctx.measureText(overlayText)
+  const textW = metrics.width
+  const textH = fontSize
+
+  const padX = isShort ? 0 : 22
+  const padY = isShort ? 0 : 16
+
+  const pillW = isShort ? 140 : Math.max(220, Math.ceil(textW + padX * 2))
+  const pillH = isShort ? 130 : Math.max(70, Math.ceil(textH + padY * 2))
+  const pillR = 20
+
   // Dark backdrop pill for contrast
   ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
-  const pillW = 140
-  const pillH = 130
-  const pillR = 20
   ctx.beginPath()
   ctx.roundRect(cx - pillW / 2, cy - pillH / 2, pillW, pillH, pillR)
   ctx.fill()
 
   // Text with stroke outline for readability
-  ctx.font = 'bold 96px system-ui, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'

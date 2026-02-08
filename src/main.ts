@@ -7,6 +7,7 @@ import {
   drawBoundingBox,
   drawCaptureOverlay,
   drawShoulderTriangle,
+  setCaptureOverlayText,
 } from './core/canvas-renderer.ts'
 import {
   detectBrowserCapabilities,
@@ -45,6 +46,10 @@ let currentReference: ReferencePose | null = null
 /** Cached detection canvas context (queried once in initializeApp, used every frame) */
 let detectionCtx: CanvasRenderingContext2D | null = null
 
+let modelSwitchPending = false
+let modelSwitchOverlayTimeoutId: number | null = null
+let onModelSwitchFirstResult: (() => void) | null = null
+
 // ---------------------------------------------------------------------------
 // Webcam
 // ---------------------------------------------------------------------------
@@ -75,6 +80,20 @@ async function setupWebcam(): Promise<HTMLVideoElement> {
 // ---------------------------------------------------------------------------
 
 function onDetectorResults(results: Results): void {
+  if (modelSwitchPending) {
+    modelSwitchPending = false
+    if (modelSwitchOverlayTimeoutId !== null) {
+      clearTimeout(modelSwitchOverlayTimeoutId)
+      modelSwitchOverlayTimeoutId = null
+    }
+
+    setCaptureOverlayText('')
+
+    const cb = onModelSwitchFirstResult
+    onModelSwitchFirstResult = null
+    cb?.()
+  }
+
   if (!firstDetectionReceived) {
     firstDetectionReceived = true
     if (!getIsCapturing()) {
@@ -128,13 +147,41 @@ async function startDetection(detector: Detector, video: HTMLVideoElement): Prom
   detectionLoopRunning = true
   const processNextFrame = async () => {
     if (!detectionLoopRunning) return
-    if (video.readyState >= 2) {
-      await detector.processFrame(video)
+
+    try {
+      if (video.readyState >= 2) {
+        await detector.processFrame(video)
+      }
+    } catch (error) {
+      // Transient errors can happen during model resets (e.g., toggling modelComplexity).
+      console.warn('[PostureLens] Detector frame processing error:', error)
     }
+
     animationFrameId = requestAnimationFrame(processNextFrame)
   }
   animationFrameId = requestAnimationFrame(processNextFrame)
   console.info('[PostureLens] Detection loop started')
+}
+
+function showModelSwitchOverlay(message: string): void {
+  // Reuse the capture overlay renderer (same canvas) for a transient message.
+  setCaptureOverlayText(message)
+
+  if (detectionCtx) {
+    const ctx = detectionCtx
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    drawCaptureOverlay(ctx)
+  }
+
+  if (modelSwitchOverlayTimeoutId !== null) {
+    clearTimeout(modelSwitchOverlayTimeoutId)
+  }
+
+  modelSwitchOverlayTimeoutId = window.setTimeout(() => {
+    modelSwitchPending = false
+    setCaptureOverlayText('')
+    modelSwitchOverlayTimeoutId = null
+  }, 4_000)
 }
 
 function stopDetection(video: HTMLVideoElement): void {
@@ -159,6 +206,147 @@ function stopDetection(video: HTMLVideoElement): void {
 
   resetDetectionStatus()
   console.info('[PostureLens] Detection stopped, webcam released')
+}
+
+// ---------------------------------------------------------------------------
+// Full pose model (optional)
+// ---------------------------------------------------------------------------
+
+type FullPoseModelCacheStatusMessage = {
+  type: 'FULL_POSE_MODEL_CACHE_STATUS'
+  cached: boolean
+}
+
+type FullPoseModelPrefetchCompleteMessage = {
+  type: 'FULL_POSE_MODEL_PREFETCH_COMPLETE'
+  ok: boolean
+  cached: boolean
+}
+
+async function postMessageToServiceWorker(message: unknown): Promise<boolean> {
+  if (!('serviceWorker' in navigator)) return false
+
+  const reg = await navigator.serviceWorker.getRegistration()
+  const target = reg?.active ?? reg?.waiting ?? reg?.installing
+  if (!target) return false
+
+  target.postMessage(message)
+  return true
+}
+
+function setupFullPoseModelToggle(detector: Detector): void {
+  const toggle = document.getElementById('full-model-toggle') as HTMLInputElement | null
+  const status = document.getElementById('full-model-status')
+
+  if (!toggle || !status) return
+
+  const setUi = (text: string, opts?: { enableToggle?: boolean }) => {
+    status.textContent = text
+    if (opts?.enableToggle !== undefined) {
+      toggle.disabled = !opts.enableToggle
+    }
+  }
+
+  const renderReadyState = () => {
+    if (toggle.checked) {
+      setUi('Full model: enabled', { enableToggle: true })
+    } else {
+      setUi('Full model: ready (optional)', { enableToggle: true })
+    }
+  }
+
+  let prefetchRequested = false
+
+  // Keep user in full control: we only enable the toggle after the full model is cached.
+  toggle.disabled = true
+  toggle.checked = false
+  setUi('Full model: checking…')
+
+  if (!('serviceWorker' in navigator)) {
+    setUi('Full model: unavailable (no service worker)')
+    return
+  }
+
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    const data = event.data as unknown
+    if (!data || typeof data !== 'object') return
+
+    const msg = data as Partial<
+      FullPoseModelCacheStatusMessage & FullPoseModelPrefetchCompleteMessage
+    >
+
+    if (msg.type === 'FULL_POSE_MODEL_CACHE_STATUS') {
+      if (msg.cached) {
+        renderReadyState()
+      } else if (!prefetchRequested) {
+        prefetchRequested = true
+        setUi('Full model: downloading…', { enableToggle: false })
+        void (async () => {
+          const ok = await postMessageToServiceWorker({ type: 'PREFETCH_FULL_POSE_MODEL' })
+          if (!ok) {
+            setUi('Full model: unavailable (service worker not ready)', { enableToggle: false })
+          }
+        })()
+      }
+
+      return
+    }
+
+    if (msg.type === 'FULL_POSE_MODEL_PREFETCH_COMPLETE') {
+      if (msg.ok && msg.cached) {
+        renderReadyState()
+      } else {
+        setUi('Full model: download failed', { enableToggle: false })
+      }
+    }
+  })
+
+  toggle.addEventListener('change', () => {
+    if (getIsCapturing()) {
+      showErrorToast('Cannot switch model during capture')
+      toggle.checked = false
+      renderReadyState()
+      return
+    }
+
+    const nextModelComplexity: 0 | 1 = toggle.checked ? 1 : 0
+
+    // This is purely a user action; we show a transient overlay while MediaPipe resets.
+    toggle.disabled = true
+    modelSwitchPending = true
+    showModelSwitchOverlay('Switching model...')
+
+    onModelSwitchFirstResult = () => {
+      toggle.disabled = false
+      renderReadyState()
+    }
+
+    // This forces MediaPipe to fetch/override the correct pose model and reset.
+    firstDetectionReceived = false
+
+    try {
+      detector.updateConfig({ modelComplexity: nextModelComplexity })
+      showSuccessToast(nextModelComplexity === 1 ? 'Full model enabled' : 'Lite model enabled')
+    } catch (error) {
+      console.error('[PostureLens] Failed to switch model complexity:', error)
+      showErrorToast('Failed to switch model')
+      toggle.checked = false
+      modelSwitchPending = false
+      setCaptureOverlayText('')
+      toggle.disabled = false
+      renderReadyState()
+    }
+  })
+
+  void (async () => {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const ok = await postMessageToServiceWorker({ type: 'CHECK_FULL_POSE_MODEL_CACHE' })
+      if (ok) return
+      await new Promise((r) => setTimeout(r, 250))
+    }
+
+    setUi('Full model: unavailable (service worker not ready)', { enableToggle: false })
+  })()
 }
 
 // ---------------------------------------------------------------------------
@@ -250,6 +438,9 @@ async function initializeApp(): Promise<void> {
     }
 
     console.info('[PostureLens] App initialized successfully')
+
+    // After we're interactive on lite, asynchronously cache the full model and enable the user toggle.
+    setupFullPoseModelToggle(detector)
 
     // Wire capture button
     if (captureBtn && startBtn) {
