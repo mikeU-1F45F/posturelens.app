@@ -59,7 +59,8 @@ bun run deploy
 │   ├── style.css        # Vanilla CSS
 │   ├── main.js          # Compiled TypeScript (generated)
 │   ├── main.js.map      # Source maps (generated)
-│   ├── sw.js           # Service worker
+│   ├── sw.template.js  # Service worker template (version injected at build)
+│   ├── sw.js           # Generated service worker (build output)
 │   └── models/         # MediaPipe model files
 ├── src/
 │   ├── main.ts         # App bootstrap and orchestration

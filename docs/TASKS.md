@@ -55,8 +55,14 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 ### 0.3 Core Project Files (Skeleton)
 - [x] Create `src/main.ts` (empty shell with imports)
 - [x] Create `public/index.html` (minimal vanilla JS shell)
-- [x] Create `public/sw.js` (service worker skeleton)
+- [x] Create `public/sw.template.js` (service worker template)
+- [x] Generate versioned `public/sw.js` from template at build/dev time
 - [x] Create placeholder files in `src/core/` and `src/workers/`
+
+### 0.4 Service Worker Updates
+- [x] Detect downloaded SW updates (waiting) and prompt: "New version available (vX.Y.Z). Reload?" (Yes/No)
+- [x] Activate update via `SKIP_WAITING` + `controllerchange` reload
+- [x] Suppress prompt for current session when user selects "No"
 
 **Dependencies**: None  
 **Outputs**: Working build pipeline, file structure
