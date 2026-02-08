@@ -18,7 +18,7 @@ Before making changes, read:
   - `sw.js` - Service worker for caching and versioning
   - `index.html` - Single-page app shell
 - **`src/`** - TypeScript source
-  - `core/` - Core logic (detection, storage, nudge engine)
+  - `core/` - Core logic (detection, storage, alert engine)
   - `workers/` - OffscreenCanvas rendering worker
   - `main.ts` - App bootstrap and orchestration
 - **`package.json`** - Version drives service worker updates
@@ -83,7 +83,7 @@ Detecting forward shoulder rounding from a front-facing 2D camera uses a **ratio
 1. Camera captures frames
 2. MediaPipe processes every 3rd frame
 3. Shoulder triangle drawn on canvas (nose → left shoulder → right shoulder)
-4. NudgeEngine compares triangle ratio against reference pose
+4. AlertEngine evaluates signals (hands-near-face + posture) and triggers alerts
 5. Worker renders ghost overlay (optional)
 6. Visual/audio alerts trigger when thresholds exceeded
 
@@ -122,8 +122,10 @@ Service worker caches all static assets including models. Version is embedded fr
 **Capture Mode** - On first load (no stored reference), requires 3-second pose capture before monitoring. On subsequent loads, loads saved reference from IndexedDB and enables monitoring immediately. "Recapture Pose" button available for lighting/position changes. "Clear all local data" link resets everything.
 
 **Alert Behavior (MVP - Hard-Coded)**
-- **Normal Deviation**: Short audio beep + background color flash, max 1 per minute
-- **Low Confidence**: Yellow background flash only, no audio
+- **No alert overlays on the video canvas** (avoid competing with geometry overlays)
+- **Normal confidence**: red background flash + short audio beep + red toast with reason (e.g. "Hands near face")
+- **Low confidence**: yellow background flash only (no audio, no toast)
+- **Global cooldown**: 60s in prod; 5s on localhost for dev
 - Configurability deferred to post-MVP
 
 **Accessibility Foundation**

@@ -60,10 +60,10 @@ The app shows contextually relevant cards based on which alert type fires — bu
 - **Face-touch alert fires** → show a skincare/dermatology card
 - **No alerts** → show a general wellness or "good job" card
 
-Card content is bundled as a static JSON file or embedded HTML. The nudge engine already knows which alert type fired — the card selection is a simple `if/else` in local code, not a remote API call.
+Card content is bundled as a static JSON file or embedded HTML. The alert engine already knows which alert type fired — the card selection is a simple `if/else` in local code, not a remote API call.
 
 ### Why This Preserves Privacy
-- Card selection logic runs in `nudge-engine.ts` alongside existing alert code — no new data paths
+- Card selection logic runs in `alert-engine.ts` alongside existing alert code — no new data paths
 - Card content is pre-bundled at build time, not fetched from a remote server
 - No behavioral data is transmitted, logged, or aggregated
 - From the network's perspective, showing a contextual card is indistinguishable from showing any other UI element — zero additional requests
@@ -127,7 +127,7 @@ These are hard boundaries, not aspirational goals:
 
 1. **MVP (v0.1.x)**: No monetization. Ship the core product and build trust.
 2. **v0.2.x**: Tier 1 — static sponsor sidebar. Validate that sponsors will pay for audience alignment without click metrics.
-3. **v0.3.x**: Tier 2 — contextual cards. Requires nudge engine integration (post-Phase 3 in TASKS.md).
+3. **v0.3.x**: Tier 2 — contextual cards. Requires alert engine integration (post-Phase 3 in TASKS.md).
 4. **v1.0+**: Tier 3 — provider directory. Requires enough user base to justify provider investment.
 
 ---

@@ -148,9 +148,9 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 ## Phase 3: Proximity & Deviation Detection
 
 ### 3.1 Hand-Face Proximity Detection
-- [ ] Create proximity calculator in `src/core/nudge-engine.ts`
+- [ ] Create proximity calculator in `src/core/proximity.ts`
 - [ ] Calculate hand-landmark to face-landmark distances
-- [ ] Implement threshold-based proximity alert
+- [ ] When threshold exceeded, trigger `AlertEngine` (normal/low-confidence) with reason "Hands near face"
 - [ ] Track proximity event frequency
 
 ### 3.2 Shoulder Rounding Detection (Ratio-Based)
@@ -161,10 +161,11 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [ ] Aggregate into overall posture score
 
 ### 3.3 Alert System MVP
-- [ ] Normal deviation: Short audio beep + background flash (max 1 per minute, hard-coded)
-- [ ] Low confidence detection: Yellow background flash only, no audio
+- [ ] Do not overlay alert status on the video canvas (avoid competing with geometry overlays)
+- [ ] Normal confidence: red background flash + short audio beep + red toast with reason
+- [ ] Low confidence: yellow background flash only (no audio, no toast)
 - [ ] Prioritize hand-face proximity alerts
-- [ ] Implement cooldown timers (avoid spam)
+- [ ] Implement global cooldown (prod: 60s, localhost dev: 5s)
 
 **Dependencies**: Phase 2  
 **Outputs**: Proximity detection working, basic deviation scoring, audio/visual alerts
@@ -184,7 +185,7 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [ ] Highlight deviation areas
 - [ ] Update on every 3rd frame
 
-### 4.3 Nudge Engine Polish
+### 4.3 Alert Engine Polish
 - [ ] Tweak deviation thresholds
 - [ ] Add smoothing to reduce jitter
 - [ ] Implement confidence filtering (low-confidence landmarks)

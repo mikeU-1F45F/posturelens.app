@@ -64,9 +64,9 @@ bun run deploy
 │   └── models/         # MediaPipe model files
 ├── src/
 │   ├── main.ts         # App bootstrap and orchestration
-│   ├── core/           # Detection, storage, nudge engine
+│   ├── core/           # Detection, storage, alert engine
 │   │   ├── detector.ts
-│   │   ├── nudge-engine.ts
+│   │   ├── alert-engine.ts
 │   │   └── reference-store.ts
 │   └── workers/        # OffscreenCanvas rendering
 │       └── ghost-renderer.ts
