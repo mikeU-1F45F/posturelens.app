@@ -6,6 +6,11 @@
 **Dev Approach**: TypeScript-first, no testing framework (LSP-driven development)  
 **Philosophy**: Make it work. Make it good. Make it performant.
 
+## CRITICAL AI AGENT NOTE
+Before making changes, read:
+- [`README.md`](README.md)
+- [`docs/TASKS.md`](docs/TASKS.md)
+
 ## Project Structure
 
 - **`public/`** - Static assets (models, service worker, HTML)

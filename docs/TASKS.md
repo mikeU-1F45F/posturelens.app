@@ -1,7 +1,7 @@
 # PostureLens Development Tasks & Milestones
 
 **Version**: 0.1.0-MVP  
-**Last Updated**: 2026-02-07
+**Last Updated**: 2026-02-08
 
 ---
 
@@ -12,7 +12,7 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - **Build Tool**: `bun build` (sufficient for static app, no complex bundling needed)
 - **Service Worker**: Hand-written (no Workbox/SW tooling) - simple precaching only
 - **TypeScript**: ES2022 target, ESNext modules, full strict mode
-- **Models**: Start with holistic-lite only (~4MB), defer full/heavy variants
+- **Models**: Start with pose landmark lite by default; allow full as an optional user toggle; defer heavy
 - **CSS**: Vanilla CSS file in `public/` (no frameworks/preprocessors)
 - **Audio**: Web Audio API programmatic beep (no audio files)
 - **Error Handling**: Non-blocking UI notifications (console + visual toast)
@@ -79,10 +79,11 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [x] Implement frame decimation (every 3rd frame)
 
 ### 1.3 Model Management
-- [ ] Download holistic-full model binary (~12MB)
-- [ ] Place in `public/models/holistic-full.bin`
-- [ ] Update service worker to cache model
+- [x] Add `pose_landmark_full.tflite` (~6.4MB, modelComplexity: 1) to `public/models/`
+- [x] Update service worker to precache core model assets and runtime-cache `/models/*`
 - [x] Add model loading progress UI
+- [x] Implement SW message-based prefetch of `pose_landmark_full.tflite` after app is interactive
+- [x] Add user-controlled toggle (disabled until full model cached) to switch lite ↔ full
 
 ### 1.4 Video Preview & Detection Visualization
 - [x] Add video element to display webcam feed
