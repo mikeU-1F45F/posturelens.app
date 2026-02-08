@@ -2,7 +2,7 @@
 // Wires together modules: capabilities, UI, canvas, capture, detection
 
 import type { Results } from '@mediapipe/holistic'
-
+import { AlertEngine } from './core/alert-engine.ts'
 import {
   drawBoundingBox,
   drawCaptureOverlay,
@@ -21,10 +21,13 @@ import {
   getIsCapturing,
 } from './core/capture.ts'
 import { Detector } from './core/detector.ts'
+import { PostureDeviation } from './core/posture.ts'
+import { HandFaceProximity } from './core/proximity.ts'
 import { clearAllData, loadReference, type ReferencePose } from './core/reference-store.ts'
 import {
   hideProgress,
   resetDetectionStatus,
+  showAlertToast,
   showErrorToast,
   showProgress,
   showSuccessToast,
@@ -50,6 +53,70 @@ let detectionCtx: CanvasRenderingContext2D | null = null
 let modelSwitchPending = false
 let modelSwitchOverlayTimeoutId: number | null = null
 let onModelSwitchFirstResult: (() => void) | null = null
+
+// ---------------------------------------------------------------------------
+// Alerts (shared mechanisms)
+// ---------------------------------------------------------------------------
+
+type SensitivityLevel = 'low' | 'medium' | 'high'
+
+const STORAGE_KEY_FACE_TOUCH_SENS = 'posturelens.sensitivity.faceTouch'
+const STORAGE_KEY_POSTURE_SENS = 'posturelens.sensitivity.posture'
+
+let alertEngine: AlertEngine | null = null
+let handFaceProximity = new HandFaceProximity()
+let postureDeviation = new PostureDeviation()
+
+let _handsNearFaceAlertCount = 0
+let _postureAlertCount = 0
+
+function parseSensitivityLevel(value: string | null): SensitivityLevel {
+  if (value === 'low' || value === 'medium' || value === 'high') return value
+  return 'medium'
+}
+
+function createHandFaceProximity(level: SensitivityLevel): HandFaceProximity {
+  switch (level) {
+    case 'high':
+      return new HandFaceProximity({
+        framesToTrigger: 2,
+        normalizedDistanceThreshold: 0.25,
+        zDistanceThreshold: 0.14,
+      })
+    case 'low':
+      return new HandFaceProximity({
+        framesToTrigger: 4,
+        normalizedDistanceThreshold: 0.12,
+        zDistanceThreshold: 0.1,
+      })
+    default:
+      return new HandFaceProximity({
+        framesToTrigger: 3,
+        normalizedDistanceThreshold: 0.18,
+        zDistanceThreshold: 0.12,
+      })
+  }
+}
+
+function createPostureDeviation(level: SensitivityLevel): PostureDeviation {
+  switch (level) {
+    case 'high':
+      return new PostureDeviation({
+        framesToTrigger: 3,
+        ratioDropThreshold: 0.05,
+      })
+    case 'low':
+      return new PostureDeviation({
+        framesToTrigger: 5,
+        ratioDropThreshold: 0.1,
+      })
+    default:
+      return new PostureDeviation({
+        framesToTrigger: 4,
+        ratioDropThreshold: 0.07,
+      })
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Webcam
@@ -122,6 +189,31 @@ function onDetectorResults(results: Results): void {
     }
   }
 
+  // Alerts are active when we are not capturing.
+  // Hands-near-face does not require a reference.
+  if (!getIsCapturing() && alertEngine && !modelSwitchPending) {
+    // Hands-near-face is higher priority than posture, but we still update posture state
+    // every frame so it can build streak/smoothing even while proximity is active.
+    const proximityAlert = handFaceProximity.update(results)
+    const postureAlert = currentReference
+      ? postureDeviation.update(results, currentReference)
+      : null
+
+    if (proximityAlert) {
+      const fired = alertEngine.trigger(proximityAlert.variant, proximityAlert.reason)
+      if (fired) {
+        _handsNearFaceAlertCount++
+        handFaceProximity.acknowledge()
+      }
+    } else if (postureAlert) {
+      const fired = alertEngine.trigger(postureAlert.variant, postureAlert.reason)
+      if (fired) {
+        _postureAlertCount++
+        postureDeviation.acknowledge()
+      }
+    }
+  }
+
   // Update status labels
   updateDetectionStatus('pose', poseLandmarks > 0, '\uD83E\uDDCD')
   updateDetectionStatus('left-hand', leftHandLandmarks > 0, '\u270B')
@@ -188,6 +280,12 @@ function showModelSwitchOverlay(message: string): void {
 function stopDetection(video: HTMLVideoElement): void {
   detectionLoopRunning = false
   firstDetectionReceived = false
+
+  handFaceProximity.reset()
+  postureDeviation.reset()
+  _handsNearFaceAlertCount = 0
+  _postureAlertCount = 0
+
   if (animationFrameId !== null) {
     cancelAnimationFrame(animationFrameId)
     animationFrameId = null
@@ -502,6 +600,35 @@ async function initializeApp(): Promise<void> {
     const detector = new Detector({ modelComplexity: 0 })
     detector.onResults(onDetectorResults)
 
+    alertEngine = new AlertEngine({ showToast: showAlertToast })
+
+    // Sensitivity controls (persisted)
+    const faceTouchSelect = document.getElementById(
+      'face-touch-sensitivity',
+    ) as HTMLSelectElement | null
+    const postureSelect = document.getElementById('posture-sensitivity') as HTMLSelectElement | null
+
+    const savedFaceTouch = parseSensitivityLevel(localStorage.getItem(STORAGE_KEY_FACE_TOUCH_SENS))
+    const savedPosture = parseSensitivityLevel(localStorage.getItem(STORAGE_KEY_POSTURE_SENS))
+
+    if (faceTouchSelect) faceTouchSelect.value = savedFaceTouch
+    if (postureSelect) postureSelect.value = savedPosture
+
+    handFaceProximity = createHandFaceProximity(savedFaceTouch)
+    postureDeviation = createPostureDeviation(savedPosture)
+
+    faceTouchSelect?.addEventListener('change', () => {
+      const level = parseSensitivityLevel(faceTouchSelect.value)
+      localStorage.setItem(STORAGE_KEY_FACE_TOUCH_SENS, level)
+      handFaceProximity = createHandFaceProximity(level)
+    })
+
+    postureSelect?.addEventListener('change', () => {
+      const level = parseSensitivityLevel(postureSelect.value)
+      localStorage.setItem(STORAGE_KEY_POSTURE_SENS, level)
+      postureDeviation = createPostureDeviation(level)
+    })
+
     updateStatusDisplay('Loading MediaPipe models...')
     showProgress('Downloading models and assets (one-time)', 30)
     await detector.loadModel()
@@ -519,6 +646,8 @@ async function initializeApp(): Promise<void> {
     // Load existing reference pose
     const existingRef = await loadReference()
     currentReference = existingRef
+    handFaceProximity.reset()
+    postureDeviation.reset()
     updateReferenceStatus(existingRef)
 
     const captureBtn = document.getElementById('capture-btn') as HTMLButtonElement
@@ -560,7 +689,11 @@ async function initializeApp(): Promise<void> {
           },
           () => ({ running: detectionLoopRunning, currentReference }),
         )
-        if (ref) currentReference = ref
+        if (ref) {
+          currentReference = ref
+          handFaceProximity.reset()
+          postureDeviation.reset()
+        }
       })
     }
 
@@ -596,6 +729,10 @@ async function initializeApp(): Promise<void> {
           if (detectionLoopRunning) stopDetection(video)
           await clearAllData()
           currentReference = null
+          handFaceProximity.reset()
+          postureDeviation.reset()
+          _handsNearFaceAlertCount = 0
+          _postureAlertCount = 0
           updateReferenceStatus(null)
           updateStatusDisplay('All local data cleared')
           if (captureBtn) {
