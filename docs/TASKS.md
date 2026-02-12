@@ -158,8 +158,8 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [x] Calculate shoulder triangle ratio: `shoulder_width / shoulder_midpoint_to_nose_distance`
 - [x] Compare live ratio against captured reference ratio
 - [x] Track nose-to-shoulder-midpoint Y-delta to guard against head-tilt false positives
-- [ ] Use Z-coordinate averages as secondary reinforcement signal
-- [ ] Aggregate into overall posture score
+- [x] Use Z-coordinate averages as secondary reinforcement signal
+- [x] Aggregate into overall posture score
 
 ### 3.3 Alert System MVP
 - [x] Do not overlay alert status on the video canvas (avoid competing with geometry overlays)
