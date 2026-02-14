@@ -10,6 +10,7 @@
 Before making changes, read:
 - [`README.md`](README.md)
 - [`docs/TASKS.md`](docs/TASKS.md)
+- [`docs/ORCHESTRATION.md`](docs/ORCHESTRATION.md) (for multi-agent workflow)
 
 ## Session Notes
 - [`docs/session-2026-02-08.md`](docs/session-2026-02-08.md)
@@ -53,6 +54,10 @@ Before making changes, read:
 
 ## GitHub Workflow for Issues & PRs
 
+**For detailed multi-agent orchestration workflow, see [`docs/ORCHESTRATION.md`](docs/ORCHESTRATION.md)**
+
+### Quick Reference
+
 **Project Board**: Use only the **"Agent Work Board"** (project #3) for all agent work. Ignore all other project boards.
 
 **Task Selection**: 
@@ -76,6 +81,8 @@ Before making changes, read:
   - Body: Summary of changes, linked issue ("Closes #N"), what was implemented
   - Reference to acceptance criteria met
 - Do not merge - wait for human review and approval
+
+**Multi-Agent Mode**: When working alongside other agents, use isolated git worktrees. See [`docs/ORCHESTRATION.md`](docs/ORCHESTRATION.md) for complete workflow including claim protocol, worktree naming conventions, port management, and refinement loops.
 
 ## Core Technologies
 
