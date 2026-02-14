@@ -1,6 +1,5 @@
 // PostureLens - App Bootstrap & Orchestrator
 // Wires together modules: capabilities, UI, canvas, capture, detection
-// This is the entry point that initializes the posture monitoring application
 
 import type { Results } from '@mediapipe/holistic'
 import { AlertEngine } from './core/alert-engine.ts'
