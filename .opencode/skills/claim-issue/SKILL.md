@@ -1,3 +1,11 @@
+---
+name: claim-issue
+description: Query the GitHub Project board for available work in the "Selected" column, assign the issue to the agent, and verify the claim succeeded. Use as the first step when starting work on a new issue.
+metadata:
+  author: posturelens-team
+  version: "1.0"
+---
+
 # Claim Issue Skill
 
 ## Purpose

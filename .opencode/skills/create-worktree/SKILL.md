@@ -1,3 +1,11 @@
+---
+name: create-worktree
+description: Create an isolated git worktree for working on a specific issue, set up the development environment, and prepare for implementation. Use immediately after claiming an issue.
+metadata:
+  author: posturelens-team
+  version: "1.0"
+---
+
 # Create Worktree Skill
 
 ## Purpose
