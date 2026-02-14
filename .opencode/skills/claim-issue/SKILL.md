@@ -3,7 +3,7 @@ name: claim-issue
 description: Query the GitHub Project board for available work in the "Selected" column, check for and validate all dependent issues are completed, assign the issue to the agent, and verify the claim succeeded. Use as the first step when starting work on a new issue.
 metadata:
   author: posturelens-team
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Claim Issue Skill
@@ -20,7 +20,8 @@ Query the GitHub Project board for available work in the "Selected" column, chec
 ## Prerequisites
 - GitHub CLI (`gh`) authenticated
 - `AGENT_ID` environment variable set (e.g., `AGENT-20260214-120345`)
-- Project ID known (stored in `.opencode/config.json` or passed as param)
+- Project owner known (e.g., `mikeU-1F45F`)
+- Project number known (e.g., `3`)
 
 ## Usage
 
@@ -28,8 +29,8 @@ Query the GitHub Project board for available work in the "Selected" column, chec
 # Interactive mode
 /opencode/skill/claim-issue
 
-# With explicit project
-/opencode/skill/claim-issue --project-id PVT_kwDOANN5s84ACbL0 --owner "@me" --project-number 3
+# With explicit parameters
+/opencode/skill/claim-issue --owner "mikeU-1F45F" --project-number 3
 ```
 
 ## Output
@@ -76,27 +77,40 @@ PROJECT_ITEM_ID=PVTI_lADOANN5s84ACbL0zgBVd95
 
 ## Algorithm
 
-1. **Query** - Get all items in project
-2. **Filter** - Find items where:
-   - Status field = "Selected"
-   - No assignees (assignees.totalCount = 0)
+1. **Query** - List all items in the project using `gh`:
+   ```bash
+   gh project item-list {project-number} --owner {owner} --limit 50 --format json
+   ```
+
+2. **Filter** - Parse JSON to find items where:
+   - `status` field = "Selected" (exact match, case-sensitive)
+   - No assignees (`assignees | length == 0`)
+   
+   ```bash
+   jq -r '.items[] | select(.status == "Selected" and (.assignees | length) == 0)'
+   ```
+
 3. **Sort** - By issue number (ascending) for deterministic ordering
+
 4. **Check Dependencies** - For first candidate item:
-   - Fetch full issue body using `gh issue view #{number}`
+   - Fetch full issue body: `gh issue view {number} --repo {repo}`
    - Parse for prerequisite/dependent issues (look for patterns like "Prerequisites", "Depends on", "Blockers", "DEPENDS:", checkboxes with issue references)
    - For each dependency found:
-     - Check if issue exists in project
+     - Query project to find the issue
      - Verify it's in "Done" column
    - If ANY dependency is not completed:
      - Log: "Issue #{number} has uncompleted dependencies: #{dep1}, #{dep2}"
      - Skip this issue and try next candidate
+
 5. **Attempt Claim** - For first item with all dependencies met:
-   - Assign AGENT_ID to issue
+   - Assign AGENT_ID using `gh issue edit {number} --add-assignee {agent}` or GraphQL
    - Wait 500ms for propagation
+
 6. **Verify** - Re-query the specific issue:
    - If assignee matches AGENT_ID → success
    - If assignee differs → race condition, retry with next item
    - If still unassigned → claim failed, retry
+
 7. **Retry** - Up to 3 attempts with 1-second delays between
 
 ## Environment Variables
@@ -104,17 +118,55 @@ PROJECT_ITEM_ID=PVTI_lADOANN5s84ACbL0zgBVd95
 - `AGENT_ID` - Unique identifier for this agent instance
 - `GITHUB_TOKEN` - (Optional) Override default gh auth
 
-## Files
+## Key Fields (from `gh project item-list` JSON)
 
-- `claim.sh` - Main implementation script
-- `query.graphql` - GraphQL query for fetching items
-- `assign.graphql` - GraphQL mutation for assigning issue
+| Field | Path | Example |
+|-------|------|---------|
+| Issue Number | `.content.number` | `23` |
+| Issue Title | `.content.title` | `"Add audio alert system"` |
+| Issue ID | `.content.id` | `I_kwDOANN5s84ACbL1` |
+| Project Item ID | `.id` | `PVTI_lADOANN5s84ACbL0zgBVd94` |
+| Status | `.status` | `"Selected"`, `"Done"`, `"Backlog"` |
+| Assignees | `.assignees` | `[]` or `[{"login": "fwang"}]` |
+| Assignee Count | `.assignees \| length` | `0`, `1`, etc. |
+
+## Important JSON Structure Notes
+
+- `.status` is a **string** (not an object with `.name`)
+- `.assignees` is an **array** (check `.assignees \| length == 0`)
+- `.content.number` may be `null` for draft items (skip these)
+- Project owner is passed to `--owner` flag (e.g., `mikeU-1F45F`)
+- Project number is passed as positional arg (e.g., `3`)
+
+## Example Commands
+
+### Query Project Items
+```bash
+gh project item-list 3 --owner "mikeU-1F45F" --limit 50 --format json
+```
+
+### Filter for Unassigned Selected Items
+```bash
+gh project item-list 3 --owner "mikeU-1F45F" --limit 50 --format json | \
+  jq -r '.items[] | select(.status == "Selected" and (.assignees | length) == 0) | \
+  "\(.content.number) | \(.content.title) | \(.id)"'
+```
+
+### Get Issue Details (for dependency checking)
+```bash
+gh issue view 5 --repo "mikeU-1F45F/posturelens.app" --json number,title,body,state
+```
+
+### Assign Issue
+```bash
+gh issue edit 5 --repo "mikeU-1F45F/posturelens.app" --add-assignee "agent-handle"
+```
 
 ## Integration
 
 After successful claim, agent should:
 1. Create worktree: `git worktree add -b feature/issue-${ISSUE_NUMBER}-...`
-2. Move to "In Progress": Update project board status
+2. Move to "In Progress": Update project board status via `gh project item-edit`
 3. Start implementation
 
 ## Error Handling
@@ -125,7 +177,7 @@ After successful claim, agent should:
 | All items assigned | Log, suggest waiting | 1 |
 | All items have uncompleted dependencies | Log, suggest human review dependencies | 1 |
 | Race condition (all retries fail) | Log collision, exit | 2 |
-| GraphQL error | Log error details | 3 |
+| GraphQL/gh error | Log error details | 3 |
 | Missing AGENT_ID | Log requirement | 4 |
 
 ## Dependency Checking
@@ -163,7 +215,7 @@ This work depends on #5 being completed.
 
 For each dependency found:
 1. Extract issue number from reference (e.g., "#5" → 5)
-2. Check if issue exists in the project
+2. Query project items to find the issue: `gh project item-list {number} --owner {owner}`
 3. Check if issue status is "Done"
 4. If issue is in any other column (Selected, In Progress, Backlog, In Review), it's NOT ready
 
@@ -172,8 +224,8 @@ For each dependency found:
 If an issue has uncompleted dependencies:
 ```
 [AGENT-20260214-120345] 14:32:02 Issue #10 has uncompleted dependencies:
-[AGENT-20260214-120345] 14:32:02   - #5 (status: Backlog)
-[AGENT-20260214-120345] 14:32:02   - #6 (status: Backlog)
+[AGENT-20260214-120345] 14:32:02   - #5 (status: Done) ✓
+[AGENT-20260214-120345] 14:32:02   - #6 (status: Backlog) ✗
 [AGENT-20260214-120345] 14:32:02 Skipping #10, trying next item...
 ```
 
@@ -212,5 +264,5 @@ Expected behavior:
 - Detect issues #5 and #6 as dependencies
 - Check #5 status → "Done" ✓
 - Check #6 status → "Backlog" ✗
-- Log dependency warning
+- Log dependency failure
 - Skip #10, try next item
