@@ -1,7 +1,7 @@
 # PostureLens Development Tasks & Milestones
 
 **Version**: 0.1.0-MVP  
-**Last Updated**: 2026-02-08
+**Last Updated**: 2026-02-14
 
 ---
 
@@ -174,50 +174,38 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 
 ---
 
-## Phase 4: Worker Architecture & Ghost Rendering
+## Phase 4: Polish & Release Prep
 
-### 4.1 OffscreenCanvas Worker Setup
-- [ ] Create `src/workers/ghost-renderer.ts`
-- [ ] Transfer canvas control to worker
-- [ ] Implement message passing protocol
+### 4.1 Settings Panel
+- [ ] Consolidate settings UI (sensitivity controls already persist to localStorage)
+- [ ] Add model complexity toggle UI (currently works via checkbox, make it clearer)
+- [ ] Alert type preferences (optional for MVP)
 
-### 4.2 Ghost Outline Rendering
-- [ ] Draw reference pose outline (semi-transparent)
-- [ ] Draw current pose outline (different color)
-- [ ] Highlight deviation areas
-- [ ] Update on every 3rd frame
-
-### 4.3 Alert Engine Polish
-- [ ] Tweak deviation thresholds
-- [ ] Add smoothing to reduce jitter
-- [ ] Implement confidence filtering (low-confidence landmarks)
-
-**Dependencies**: Phase 3  
-**Outputs**: Ghost overlay, smoother detection
-
----
-
-## Phase 5: Polish & Release Prep
-
-### 5.1 Settings Panel
-- [ ] Add settings UI (sensitivity, model level)
-- [ ] Persist settings to localStorage
-- [ ] Add model complexity toggle (0, 1, 2)
-- [ ] Alert type preferences
-
-### 5.2 Battery API Integration
+### 4.2 Battery API Integration (Optional)
 - [ ] Monitor battery level
 - [ ] Auto-throttle when < 20%
 - [ ] Show battery indicator in UI
 - [ ] Restore full performance when charging
 
-### 5.3 Performance Optimizations
+### 4.3 Posture Detection Enhancements
+- [ ] Add nose Z-coordinate tracking to posture scoring (as low-confidence reinforcement)
+  - Track nose Z delta from reference separately from shoulder Z average
+  - Add nose Z component to posture score calculation
+  - Use as secondary signal when head position changes independently of shoulders
+
+### 4.4 Alert Visual Feedback Improvements
+- [ ] Increase alert flash duration for better visibility
+  - Extend red (normal) flash duration from ~650ms to ~1000-1200ms
+  - Extend yellow (low-confidence) flash duration similarly
+  - Ensure users notice alerts, especially low-confidence ones that lack audio/toast
+
+### 4.5 Performance Optimizations
 - [ ] Add GPU memory cleanup (`holistic.close()`)
 - [ ] Implement camera resolution selection
 - [ ] Optimize JavaScript bundle size
 - [ ] Profile and fix hot paths
 
-### 5.4 Documentation & Release
+### 4.6 Documentation & Release
 - [ ] Update README with user guide
 - [ ] Add inline code comments for complex algorithms
 - [ ] Bump version to 0.1.0
@@ -225,13 +213,14 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 - [ ] Deploy to Cloudflare Pages
 - [ ] Verify service worker update mechanism
 
-**Dependencies**: Phase 4  
+**Dependencies**: Phase 3  
 **Outputs**: MVP 0.1.0 ready for use
 
 ---
 
 ## Notes & Open Questions
 
+- **Ghost Rendering**: Deferred to post-MVP. Current shoulder triangle + alerts provide sufficient visual feedback. OffscreenCanvas worker would add complexity without clear MVP value.
 - **Lite Model**: Currently not in plan; will add if user feedback requests lower resource usage
 - **Gesture Support**: Future enhancement for custom gestures as reference triggers
 - **Data Export**: Consider allowing users to export reference poses (JSON) for backup
@@ -242,9 +231,18 @@ All tasks designed for 1-2 hour side-hustle sessions. Target: Single developer w
 
 ## Milestone Checklist
 
-- [ ] **M0**: Repo structure, build tools (end of Phase 0)
-- [ ] **M1**: MediaPipe running with webcam (end of Phase 1)
-- [ ] **M2**: Reference capture working (end of Phase 2)
-- [ ] **M3**: Proximity detection alerting (end of Phase 3)
-- [ ] **M4**: Ghost rendering and visual alerts (end of Phase 4)
-- [ ] **M5**: MVP 0.1.0 released (end of Phase 5)
+- [x] **M0**: Repo structure, build tools (end of Phase 0)
+- [x] **M1**: MediaPipe running with webcam (end of Phase 1)
+- [x] **M2**: Reference capture working (end of Phase 2)
+- [x] **M3**: Proximity detection alerting (end of Phase 3)
+- [ ] **M4**: MVP 0.1.0 released (end of Phase 4)
+
+---
+
+## Post-MVP Ideas
+
+- **Ghost/Pose Overlay**: OffscreenCanvas worker for rendering reference vs current pose comparison
+- **Pose-Only Mode**: Skip hand/face tracking for lighter resource usage
+- **Custom Gestures**: User-defined hand gestures as trigger actions
+- **Data Portability**: Export/import reference poses as JSON
+- **Testing Framework**: Add automated tests once architecture stabilizes
