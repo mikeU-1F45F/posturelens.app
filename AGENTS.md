@@ -51,6 +51,32 @@ Before making changes, read:
 - Single-line commit messages only — no extended body, no co-author signatures
 - Use conventional commit style messages with the prefix but no scope Good-- `feat: added new function` Bad-- `feat(detector): added new function \r\n -Did this thing or that thing`
 
+## GitHub Workflow for Issues & PRs
+
+**Project Board**: Use only the **"Agent Work Board"** (project #3) for all agent work. Ignore all other project boards.
+
+**Task Selection**: 
+- **Only take tasks from the "Selected" column** - this is where the human has pre-approved work
+- **Never take from "Backlog"** - this is human-controlled and requires human triage first
+- If no items in "Selected" column, ask the human to triage
+
+**Issue Review Process**:
+- Read the full issue including acceptance criteria, out of scope, and definition of done
+- **Review and tick off checkboxes** in the issue to confirm work adheres to A/C and Out of Scope
+- Human will review ticked items during PR review to confirm agent did the work
+- If acceptance criteria are unclear or impossible, ask the human before proceeding
+
+**Creating a Pull Request**:
+- Create feature branch from main: `git checkout -b feature/issue-{number}-brief-desc`
+- Make focused changes that address only the issue scope
+- Commit with conventional commit style: `feat: description` or `fix: description`
+- Push branch: `git push -u origin feature/issue-{number}-brief-desc`
+- Create PR with:
+  - Title: Clear summary of changes (conventional commit style)
+  - Body: Summary of changes, linked issue ("Closes #N"), what was implemented
+  - Reference to acceptance criteria met
+- Do not merge - wait for human review and approval
+
 ## Core Technologies
 
 **MediaPipe Holistic** - C++/WASM binary for pose, hands, and face mesh tracking. Runs at 60-90 FPS entirely in-browser with WebGPU acceleration (Chrome 113+) or WASM fallback.
