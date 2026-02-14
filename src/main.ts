@@ -1,5 +1,6 @@
 // PostureLens - App Bootstrap & Orchestrator
 // Wires together modules: capabilities, UI, canvas, capture, detection
+// Testing branch protection - this should be blocked from direct push
 
 import type { Results } from '@mediapipe/holistic'
 import { AlertEngine } from './core/alert-engine.ts'
